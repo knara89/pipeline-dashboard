@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>상품전략1팀 · 신제품 개발 파이프라인</title>
+<style>
+:root{
+  --surface-1:#fcfcfb; --surface-2:#f4f3ef; --surface-3:#eeede8; --page:#f9f9f7;
+  --ink-1:#0b0b0b; --ink-2:#52514e; --ink-3:#898781;
+  --grid:#e8e7e1; --line:#e1e0d9; --axis:#c3c2b7;
+  --ring:rgba(11,11,11,.09); --hover:rgba(11,11,11,.035);
+  --p1:#86b6ef; --p2:#3987e5; --p3:#256abf; --p4:#104281;
+  --acc:#2a78d6; --acc-soft:rgba(42,120,214,.10);
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b; --neutral:#898781;
+  --wip:#9ec5f4;
+  --warn-ink:#8a5c00; --crit-ink:#a12a2a; --good-ink:#006300;
+  --warn-bg:rgba(250,178,25,.13); --crit-bg:rgba(208,59,59,.10); --info-bg:rgba(42,120,214,.09);
+  --sh-1:0 1px 2px rgba(11,11,11,.04);
+  --sh-2:0 2px 4px rgba(11,11,11,.05), 0 8px 24px rgba(11,11,11,.05);
+  --r-lg:14px; --r-md:10px; --r-sm:7px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --surface-1:#191918; --surface-2:#212120; --surface-3:#2a2a28; --page:#0d0d0d;
+  --ink-1:#fff; --ink-2:#c3c2b7; --ink-3:#8e8c86;
+  --grid:#2c2c2a; --line:#2c2c2a; --axis:#383835;
+  --ring:rgba(255,255,255,.10); --hover:rgba(255,255,255,.05);
+  --p1:#184f95; --p2:#2a78d6; --p3:#5598e7; --p4:#9ec5f4;
+  --acc:#3987e5; --acc-soft:rgba(57,135,229,.16);
+  --warn-ink:#fab219; --crit-ink:#e78080; --good-ink:#0ca30c;
+  --warn-bg:rgba(250,178,25,.14); --crit-bg:rgba(208,59,59,.16); --info-bg:rgba(57,135,229,.14);
+  --sh-1:0 1px 2px rgba(0,0,0,.3);
+  --sh-2:0 2px 4px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--ink-1);
+  font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.wrap{max-width:1640px;margin:0 auto;padding:0 24px 90px}
+
+/* ── top bar ───────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--page) 88%,transparent);
+  backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--line);margin:0 -24px 18px;padding:14px 24px 13px}
+.topbar .inner{max-width:1640px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+h1{font-size:17px;margin:0;font-weight:660;letter-spacing:-.02em;white-space:nowrap}
+.eyebrow{font-size:10.5px;font-weight:640;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.metaline{font-size:11.5px;color:var(--ink-3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--ring);
+  border-radius:999px;padding:2px 9px;font-size:11px;color:var(--ink-2)}
+.pill b{font-weight:620;color:var(--ink-1)}
+.spacer{flex:1}
+.btn{appearance:none;border:1px solid var(--ring);background:var(--surface-1);color:var(--ink-1);
+  padding:7px 12px;border-radius:var(--r-sm);font-size:12px;font-family:inherit;cursor:pointer;
+  box-shadow:var(--sh-1);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--hover)}
+.btn.ghost{box-shadow:none;background:transparent}
+
+/* ── toolbar ───────────────────────────────── */
+.toolbar{background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);
+  box-shadow:var(--sh-1);padding:11px 13px;margin-bottom:14px;
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.search{position:relative;flex:0 0 auto}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;opacity:.45;pointer-events:none}
+input[type=search]{font-family:inherit;font-size:12.5px;color:var(--ink-1);background:var(--surface-2);
+  border:1px solid transparent;border-radius:var(--r-sm);padding:7px 10px 7px 29px;width:246px;transition:.12s}
+input[type=search]:focus{outline:none;background:var(--surface-1);border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+select{font-family:inherit;font-size:12px;color:var(--ink-1);background:var(--surface-1);
+  border:1px solid var(--ring);border-radius:var(--r-sm);padding:6px 8px;max-width:196px;cursor:pointer}
+select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.tlab{font-size:10.5px;font-weight:600;color:var(--ink-3);letter-spacing:.02em}
+.divider{width:1px;height:20px;background:var(--line);margin:0 3px}
+.toolbar{row-gap:9px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:var(--r-sm);padding:2px;gap:2px}
+.seg button{appearance:none;border:0;background:transparent;font-family:inherit;font-size:12px;color:var(--ink-2);
+  padding:5px 10px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.12s}
+.seg button i{width:8px;height:8px;border-radius:2.5px;display:inline-block}
+.seg button[aria-pressed="true"]{background:var(--surface-1);color:var(--ink-1);font-weight:620;box-shadow:var(--sh-1)}
+.seg button[aria-pressed="false"]{opacity:.55}
+.seg button:hover{opacity:1}
+.tgl{appearance:none;border:1px solid var(--ring);background:var(--surface-1);border-radius:999px;
+  padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center}
+.tgl[aria-pressed="true"]{background:var(--acc);border-color:transparent;color:#fff;font-weight:620}
+
+/* ── kpi ───────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:11px;margin-bottom:14px}
+.kpi{background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);padding:13px 15px 12px;
+  box-shadow:var(--sh-1);position:relative;overflow:hidden}
+.kpi .lab{font-size:11px;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:5px;font-weight:560}
+.kpi .val{font-size:28px;font-weight:640;letter-spacing:-.035em;line-height:1;display:flex;align-items:baseline;gap:3px}
+.kpi .val small{font-size:11.5px;font-weight:500;color:var(--ink-3)}
+.kpi .sub{font-size:10.5px;color:var(--ink-3);margin-top:6px;line-height:1.4}
+.kpi .meter{height:3px;border-radius:2px;background:var(--surface-3);margin-top:9px;overflow:hidden}
+.kpi .meter i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+.kpi.is-crit .val{color:var(--crit)} .kpi.is-crit .meter i{background:var(--crit)}
+.kpi.is-warn .val{color:var(--warn-ink)} .kpi.is-warn .meter i{background:var(--warn)}
+.kpi.is-good .val{color:var(--good-ink)} .kpi.is-good .meter i{background:var(--good)}
+
+/* ── cards ─────────────────────────────────── */
+.card{background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);box-shadow:var(--sh-1)}
+.card > .hd{padding:14px 16px 0}
+.card > .bd{padding:10px 16px 14px}
+.hd h2{font-size:13px;margin:0;font-weight:640;letter-spacing:-.01em}
+.hd .sub{font-size:11px;color:var(--ink-3);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1.12fr 1fr;gap:11px;margin-bottom:14px}
+@media(max-width:1240px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* ── check panel ───────────────────────────── */
+.checkwrap{display:grid;grid-template-columns:300px 1fr;gap:0;margin-bottom:14px;
+  background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);box-shadow:var(--sh-1);overflow:hidden}
+@media(max-width:1000px){.checkwrap{grid-template-columns:1fr}}
+.checkwrap .left{border-right:1px solid var(--line);padding:14px 16px 16px}
+.checkwrap .right{padding:14px 16px;min-width:0}
+.flagrow{display:flex;align-items:center;gap:8px;padding:5px 7px;margin:0 -7px;border-radius:var(--r-sm);
+  cursor:pointer;font-size:12px;color:var(--ink-2)}
+.flagrow:hover{background:var(--hover)}
+.flagrow[aria-pressed="true"]{background:var(--acc-soft);color:var(--ink-1);font-weight:600}
+.flagrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flagrow .c{font-variant-numeric:tabular-nums;font-weight:620;color:var(--ink-1)}
+.fdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.fdot.crit{background:var(--crit)} .fdot.warn{background:var(--warn)} .fdot.info{background:var(--acc)}
+.clist{display:flex;flex-direction:column;gap:1px;max-height:392px;overflow:auto;margin:0 -8px;padding:0 8px}
+.citem{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:8px;border-radius:var(--r-sm);cursor:pointer}
+.citem:hover{background:var(--hover)}
+.citem .t{font-size:12.5px;font-weight:560;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.citem .meta{font-size:11px;color:var(--ink-3);grid-column:1/2}
+.citem .msg{font-size:11.5px;color:var(--ink-2);grid-column:1/-1;margin-top:1px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:640;border-radius:5px;
+  padding:2px 6px;white-space:nowrap;line-height:1.45}
+.badge.crit{background:var(--crit-bg);color:var(--crit-ink)}
+.badge.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.badge.info{background:var(--info-bg);color:var(--acc)}
+
+/* ── matrix / load ─────────────────────────── */
+.mx{width:100%;border-collapse:separate;border-spacing:2px;font-size:11.5px;table-layout:fixed}
+.mx th{padding:5px 6px;font-weight:600;color:var(--ink-3);font-size:10.5px;text-align:center;white-space:nowrap}
+.mx th.rowh{text-align:left;width:114px;color:var(--ink-2);font-weight:560;font-size:11.5px;
+  overflow:hidden;text-overflow:ellipsis}
+.mx td{padding:0;text-align:center}
+.mx .cell{border-radius:6px;padding:6px 2px;font-variant-numeric:tabular-nums;font-weight:600;
+  color:var(--ink-1);cursor:pointer;transition:box-shadow .12s}
+.mx .cell.z{color:var(--ink-3);font-weight:400}
+.mx .cell:hover{box-shadow:0 0 0 2px var(--acc)}
+.mx .tot{background:var(--surface-2);color:var(--ink-2);font-weight:620}
+.mx tr.totrow td .cell{background:var(--surface-2)!important;color:var(--ink-2)}
+.mxlegend{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--ink-3);margin-top:10px}
+.mxlegend .sc{display:flex;gap:2px}
+.mxlegend .sc i{width:17px;height:9px;border-radius:2px;display:block}
+
+.load{display:flex;flex-direction:column;gap:0}
+.loadrow{display:grid;grid-template-columns:78px 1fr auto;gap:11px;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--grid)}
+.loadrow:last-child{border-bottom:0}
+.loadrow .who{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600}
+.loadrow .who i{width:9px;height:9px;border-radius:3px}
+.lbar{height:15px;border-radius:5px;background:var(--surface-2);display:flex;overflow:hidden;gap:2px}
+.lbar span{display:block;height:100%}
+.lnum{font-size:11px;color:var(--ink-3);display:flex;gap:9px;white-space:nowrap;justify-content:flex-end;
+  font-variant-numeric:tabular-nums;min-width:150px}
+.lnum b{color:var(--ink-1);font-weight:620}
+.lnum .c{color:var(--crit)} .lnum .w{color:var(--warn-ink)}
+.loadsub{font-size:10.5px;color:var(--ink-3);margin-top:4px;display:flex;gap:10px}
+
+/* ── charts ────────────────────────────────── */
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin:9px 0 4px;font-size:11.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.card svg,#ch1 svg,#ch2 svg{display:block;width:100%;overflow:visible}
+.tick{font-size:10.5px;fill:var(--ink-3)}
+.vlab{font-size:10.5px;fill:var(--ink-2);font-variant-numeric:tabular-nums}
+.gridline{stroke:var(--grid);stroke-width:1}
+.baseline{stroke:var(--axis);stroke-width:1}
+.seg2{transition:opacity .12s}
+.seg2:hover{opacity:.82}
+
+/* ── guide ─────────────────────────────────── */
+details.guide{background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);
+  box-shadow:var(--sh-1);margin-bottom:12px}
+details.guide summary{list-style:none;cursor:pointer;padding:11px 16px;font-size:12px;font-weight:600;
+  color:var(--ink-2);display:flex;align-items:center;gap:8px}
+details.guide summary::-webkit-details-marker{display:none}
+details.guide summary:after{content:"▾";margin-left:auto;color:var(--ink-3);transition:transform .15s}
+details.guide[open] summary:after{transform:rotate(180deg)}
+.guidebody{padding:0 16px 14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.g1{display:inline-flex;align-items:center;gap:6px}
+b.k{width:32px;height:18px;border-radius:5px;font-size:9px;letter-spacing:-.04em;font-weight:620;
+  display:grid;place-items:center;border:1px solid var(--ring);background:transparent;color:var(--ink-3)}
+b.k.done{background:var(--acc);border-color:transparent;color:#fff}
+b.k.wip{background:var(--wip);border-color:transparent;color:var(--ink-1)}
+.sep{width:1px;height:18px;background:var(--line)}
+
+/* ── table ─────────────────────────────────── */
+.tablewrap{background:var(--surface-1);border:1px solid var(--ring);border-radius:var(--r-lg);
+  box-shadow:var(--sh-1);overflow:clip}
+.tbar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.tbar h2{font-size:13px;margin:0;font-weight:640}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
+thead th{position:sticky;top:63px;z-index:2;background:var(--surface-2);color:var(--ink-3);font-weight:620;
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:10.5px;
+  letter-spacing:.03em;text-transform:uppercase}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--grid);vertical-align:top}
+tbody tr.grp td{position:sticky;top:96px;z-index:1;background:var(--surface-2);font-weight:640;font-size:11.5px;color:var(--ink-1);padding:7px 12px;
+  border-bottom:1px solid var(--line)}
+tbody tr.grp .cnt{color:var(--ink-3);font-weight:500}
+tbody tr.row:hover td{background:var(--hover);cursor:pointer}
+tbody tr.row.r-crit td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+tbody tr.row.r-warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.nm{font-weight:560;color:var(--ink-1);display:block;max-width:330px;line-height:1.4}
+.sub2{color:var(--ink-3);font-size:10.5px;display:block;margin-top:3px;max-width:330px}
+.pm{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pm i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.stg{display:inline-flex;gap:3px}
+.stg b{width:32px;height:18px;border-radius:5px;font-size:9px;letter-spacing:-.04em;font-weight:620;
+  display:grid;place-items:center;border:1px solid var(--ring);background:transparent;color:var(--ink-3)}
+.stg b.done{background:var(--acc);border-color:transparent;color:#fff}
+.stg b.wip{background:var(--wip);border-color:transparent;color:var(--ink-1)}
+.now{font-size:10.5px;color:var(--ink-2);margin-top:5px;display:block;font-weight:560}
+.st{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:11.5px;font-weight:560}
+.st .g{color:var(--good)} .st .w{color:var(--warn)} .st .c{color:var(--crit)} .st .n{color:var(--ink-3)}
+.dt{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11.5px}
+.dt.exact{color:var(--ink-1);font-weight:600}
+.dt.approx{color:var(--ink-2)}
+.dt.approx:after{content:" 예정";color:var(--ink-3);font-weight:400;font-size:10.5px}
+.dt.none{color:var(--ink-3)}
+.dt.done{color:var(--good-ink);font-weight:600}
+.dt.done:after{content:" 입고완료";font-weight:400;font-size:10.5px;color:var(--ink-3)}
+.tag{display:inline-block;font-size:9.5px;font-weight:660;color:var(--acc);border:1px solid var(--acc);
+  border-radius:4px;padding:0 4px;margin-right:5px;vertical-align:1.5px}
+.tag.gray{color:var(--ink-3);border-color:var(--axis)}
+.issue{max-width:270px;color:var(--ink-2);font-size:11.5px;line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chcell{max-width:124px;color:var(--ink-2);font-size:11.5px}
+.flags{display:flex;flex-direction:column;gap:3px;align-items:flex-start;max-width:212px}
+.empty{padding:52px;text-align:center;color:var(--ink-3);font-size:12px}
+
+/* ── drawer ────────────────────────────────── */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(600px,95vw);background:var(--surface-1);
+  border-left:1px solid var(--ring);transform:translateX(100%);transition:transform .22s cubic-bezier(.32,.72,0,1);
+  z-index:41;display:flex;flex-direction:column;box-shadow:var(--sh-2)}
+.drawer.on{transform:none}
+.dhead{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+.dbody{padding:16px 20px 48px;overflow:auto}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:7px 14px;font-size:12px;margin-bottom:14px}
+.kv dt{color:var(--ink-3)} .kv dd{margin:0;color:var(--ink-1);word-break:break-word}
+.sec{font-size:10.5px;font-weight:660;color:var(--ink-3);margin:20px 0 9px;letter-spacing:.07em;text-transform:uppercase}
+.note{background:var(--surface-2);border-radius:var(--r-md);padding:11px 13px;font-size:12px;color:var(--ink-1);margin-bottom:6px;line-height:1.55}
+.cknote{border-radius:var(--r-md);padding:10px 12px;margin-bottom:6px;font-size:12px;line-height:1.5}
+.cknote.crit{background:var(--crit-bg)} .cknote.warn{background:var(--warn-bg)} .cknote.info{background:var(--info-bg)}
+.cknote b{display:block;font-size:11.5px;margin-bottom:2px}
+.cknote.crit b{color:var(--crit-ink)} .cknote.warn b{color:var(--warn-ink)} .cknote.info b{color:var(--acc)}
+.step{display:grid;grid-template-columns:22px 1fr;gap:11px;padding:0 0 13px;position:relative}
+.step:before{content:"";position:absolute;left:10px;top:20px;bottom:0;width:1px;background:var(--line)}
+.step:last-child:before{display:none}
+.step .dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--axis);background:var(--surface-1);
+  display:grid;place-items:center;font-size:10px;color:var(--ink-3);z-index:1}
+.step.done .dot{background:var(--acc);border-color:transparent;color:#fff}
+.step.wip .dot{background:var(--wip);border-color:transparent;color:var(--ink-1)}
+.step .t{font-size:12.5px;font-weight:560}
+.step .d{font-size:11px;color:var(--ink-3);margin-top:2px}
+.tl{border-left:2px solid var(--line);padding-left:14px;margin-left:4px}
+.tl .e{margin-bottom:13px}
+.tl .e .w{font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tl .e .x{font-size:12px;color:var(--ink-1);margin-top:3px;line-height:1.5}
+.tl .e.chg .x{font-weight:560}
+.tl .e.chg .w:after{content:" · 변경";color:var(--acc);font-weight:660}
+.tip{position:fixed;pointer-events:none;background:var(--ink-1);color:var(--page);border-radius:var(--r-sm);
+  padding:6px 9px;font-size:11.5px;box-shadow:var(--sh-2);opacity:0;transition:opacity .1s;z-index:60;white-space:nowrap}
+.tip.on{opacity:1}
+.tip b{font-weight:660}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--axis);border-radius:9px;border:2px solid var(--surface-1)}
+::-webkit-scrollbar-track{background:transparent}
+@media print{.topbar .btn,.toolbar,.drawer,.scrim,details.guide{display:none!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="inner">
+    <div class="brand">
+      <div>
+        <div class="eyebrow">상품전략1팀</div>
+        <h1>신제품 개발 파이프라인</h1>
+      </div>
+    </div>
+    <div class="metaline" id="meta"></div>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="csv">CSV 내보내기</button>
+    <button class="btn ghost" id="theme">다크 모드</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="toolbar">
+    <div class="search">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
+        <circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg>
+      <input type="search" id="q" placeholder="제품명 · 채널 · 이슈 · 제조사 검색">
+    </div>
+    <div class="divider"></div>
+    <span class="tlab">담당자</span><span class="seg" id="fpm"></span>
+    <div class="divider"></div>
+    <select id="fgroup"></select>
+    <select id="fch"></select>
+    <select id="fstatus"></select>
+    <select id="ftype"></select>
+    <select id="fbrand"></select>
+    <select id="fsrc"></select>
+    <div class="divider"></div>
+    <span style="display:inline-flex;align-items:center;gap:7px"><span class="tlab">보기</span><select id="fview">
+      <option value="month">출시월별</option>
+      <option value="monthch">출시월 &gt; 채널별</option>
+      <option value="ch">채널별</option>
+      <option value="pm">담당자별</option>
+      <option value="type">유형별</option>
+    </select></span>
+    <div class="divider"></div>
+    <button class="tgl" id="fchg" aria-pressed="false">금주 변동</button>
+    <button class="tgl" id="fchk" aria-pressed="false">체크 필요</button>
+    <button class="btn ghost" id="reset">초기화</button>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="checkwrap">
+    <div class="left">
+      <div class="eyebrow" style="margin-bottom:9px">체크 사유별</div>
+      <div id="flagSummary"></div>
+    </div>
+    <div class="right">
+      <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:8px">
+        <h2 style="font-size:13px;margin:0;font-weight:640">이번 주 확인이 필요한 건</h2>
+        <span class="sub" id="ckSub" style="font-size:11px;color:var(--ink-3)"></span>
+      </div>
+      <div class="clist" id="ckList"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="hd"><h2>월별 진행 건수</h2><div class="sub">출시월 기준 · 담당자별 누적</div></div>
+      <div class="bd"><div class="legend" id="lg1"></div><div id="ch1"></div></div>
+    </section>
+    <section class="card">
+      <div class="hd"><h2>채널 × 개발유형별 진행 건수</h2><div class="sub">한 제품이 복수 채널에 해당될 수 있음 · 막대 클릭 시 해당 채널만 조회</div></div>
+      <div class="bd"><div class="legend" id="lg2"></div><div id="ch2"></div></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="hd" style="display:flex;align-items:flex-start;gap:10px">
+        <div style="flex:1"><h2>담당자 투입 매트릭스</h2>
+          <div class="sub">칸 = 담당 건수 · 진할수록 많음 · 칸을 클릭하면 해당 조합만 조회</div></div>
+        <span class="seg" id="mxDim">
+          <button data-d="ch" aria-pressed="true">채널별</button>
+          <button data-d="type" aria-pressed="false">유형별</button>
+        </span>
+      </div>
+      <div class="bd"><div id="mx"></div></div>
+    </section>
+    <section class="card">
+      <div class="hd"><h2>담당자별 업무 부하</h2>
+        <div class="sub">진행 단계 구간별 분포 · 확인 필요 건 · 30일 내 입고 예정</div></div>
+      <div class="bd"><div class="legend" id="lgLoad"></div><div class="load" id="load"></div></div>
+    </section>
+  </div>
+
+  <details class="guide"><summary>개발 단계 · 표기 안내</summary><div class="guidebody" id="guide"></div></details>
+
+  <div class="tablewrap">
+    <div class="tbar"><h2 id="tCount"></h2><span class="spacer"></span>
+      <span class="sub" style="font-size:11px;color:var(--ink-3)">행을 클릭하면 상세 진행 이력이 열립니다</span></div>
+    <table>
+      <thead><tr>
+        <th style="width:24%">품목</th><th>유형</th><th>담당자</th><th>채널</th>
+        <th style="width:250px">개발 단계</th><th>입고일</th><th>상태</th>
+        <th style="width:16%">비고 · 체크</th><th>최근 진행사항</th>
+      </tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+    <div class="empty" id="noRows" style="display:none">조건에 맞는 상품이 없습니다.</div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dhead">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <h2 id="dTitle" style="font-size:15.5px;margin:0;font-weight:640;letter-spacing:-.015em"></h2>
+        <div id="dSub" style="font-size:11.5px;color:var(--ink-3);margin-top:4px"></div>
+      </div>
+      <button class="btn ghost" id="dClose">닫기</button>
+    </div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = {"base":"2026-08-13","baseFile":"주간업무보고_20260813(취합).xlsx","typeGroups":["신제품","리뉴얼","규격·패키지변경","덧방·성분변경"],"flagDefs":[{"k":"overdue","lv":"crit","n":"입고일 경과"},{"k":"delay","lv":"crit","n":"일정 지연·변동"},{"k":"decide","lv":"crit","n":"의사결정 필요"},{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완"},{"k":"dateChg","lv":"warn","n":"입고일 변경"},{"k":"stall","lv":"warn","n":"진행 정체"},{"k":"waiting","lv":"warn","n":"회신·승인 대기"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정"},{"k":"noDp","lv":"warn","n":"입고 임박·상세페이지 미착수"},{"k":"noIssue","lv":"warn","n":"진행사항 미기재"},{"k":"soon","lv":"info","n":"입고 임박"},{"k":"split","lv":"info","n":"분할입고"},{"k":"newItem","lv":"info","n":"금주 신규"},{"k":"noMemo","lv":"info","n":"체크리스트 메모 없음"}],"clFile":"상품리스트_260819","files":["20260730","20260806","20260813"],"stages":[{"key":"concept","no":"①","name":"컨셉기획","short":"컨셉"},{"key":"sample","no":"②","name":"시제","short":"시제"},{"key":"spec","no":"③","name":"규격/견적 확정","short":"규격"},{"key":"design","no":"④","name":"디자인","short":"디자인"},{"key":"label","no":"⑤","name":"표시검토","short":"표시"},{"key":"dp","no":"⑥","name":"상세페이지","short":"상세"},{"key":"inb","no":"⑦","name":"입고","short":"입고"}],"pms":["A","B","C","D"],"groups":["26년 8월","26년 9월","26년 10월"],"channels":["공구·라이브","다이소","면세점","범용","오픈마켓·자사몰","올리브영","창고형·마트","쿠팡","편의점","해외","해외 · 대만","해외 · 동남아","해외 · 멕시코","해외 · 미국","해외 · 미얀마","해외 · 영국","해외 · 인도네시아","해외 · 중국"],"products":[{"id":1,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 001","dept":"요청부서 1","devtype":"리뉴얼","pm":"A","channel":"오픈마켓","chs":["오픈마켓·자사몰"],"chMain":"오픈마켓·자사몰","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"6월 4일","confirm":"6월 18일","dpmove":"미정","indate":"08/05(수)","indate_iso":"2026-08-05","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"기안완료 6월 4일","sample":"⑦ 입고 완료로 소급","spec":"⑦ 입고 완료로 소급","design":"⑦ 입고 완료로 소급","label":"⑦ 입고 완료로 소급","dp":"상세페이지 시트 · 디자인 수정 중 · ⑦ 입고 완료로 소급","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":{"item":"제품 001","status":"디자인 수정 중","team":"상품전략1팀","pm":"A","planner":"기획 A","designer":"","steps":[{"n":"콘텐츠 접수","v":"08/11(화)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"08/11(화)"},{"n":"1차 시안","v":"08/19(수)"},{"n":"본심의·QM검수","v":"-"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"08/05(수)"},{"n":"상세페이지 완료","v":"08/19(수)"}]},"clSched":"8월/완료","clMemo":"","clBlock":"","gidx":0},{"id":2,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 002","dept":"요청부서 2","devtype":"리뉴얼","pm":"D","channel":"해외(인니)","chs":["해외","해외 · 인도네시아"],"chMain":"해외 · 인도네시아","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"wip","label":"done","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 해외마케팅부","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"목업\"","label":"진행사항 \"qm 검토 완료\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 완료","stageIdx":4,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"QM 검토 완료, 목업 사진 전달…\")"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":0},{"id":3,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 003","dept":"요청부서 2","devtype":"리뉴얼","pm":"A","channel":"해외(인니)","chs":["해외","해외 · 인도네시아"],"chMain":"해외 · 인도네시아","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"8월 5일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"done","dp":"none","inb":"none"},"why":{"concept":"기안완료 8월 5일","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"이관\"","label":"진행사항 \"인증 완료\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 완료","stageIdx":4,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":0},{"id":4,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 004","dept":"요청부서 3","devtype":"덧방라벨","pm":"B","channel":"해외(미국아마존)","chs":["해외","해외 · 미국"],"chMain":"해외 · 미국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-08-03","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"done","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-08-03","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 완료","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":0},{"id":5,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 005","dept":"요청부서 4","devtype":"규격변경","pm":"A","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"4월 29일","confirm":"5월 18일","dpmove":"미정","indate":"08/11(화)","indate_iso":"2026-08-11","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"07월 중","saledate_kind":"approx","maker":"제조사 1","ftype":"캔디류","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"기안완료 4월 29일","sample":"⑦ 입고 완료로 소급","spec":"제조사·규격 확정 (서흥)","design":"⑦ 입고 완료로 소급","label":"⑦ 입고 완료로 소급","dp":"⑦ 입고 완료로 소급","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"8월/완료","clMemo":"","clBlock":"","gidx":0},{"id":6,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 006","dept":"요청부서 4","devtype":"규격변경","pm":"D","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"4월 29일","confirm":"5월 18일","dpmove":"미정","indate":"08/13(목)","indate_iso":"2026-08-13","indate_kind":"exact","indate_raw":"2026-08-13","saledate":"08월 중","saledate_kind":"approx","maker":"제조사 2","ftype":"기타가공품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"기안완료 4월 29일","sample":"⑦ 입고 완료로 소급","spec":"제조사·규격 확정 (코스팜)","design":"⑦ 입고 완료로 소급","label":"⑦ 입고 완료로 소급","dp":"⑦ 입고 완료로 소급","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/13(목)","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/13(목)","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/13(목)","chg":true}],"chg":true,"dp":null,"clSched":"8월/완료","clMemo":"","clBlock":"","gidx":0},{"id":7,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 007","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2월 9일","confirm":"2월 9일","dpmove":"02/11(수)","indate":"08/19(수)","indate_iso":"2026-08-19","indate_kind":"exact","indate_raw":"8월 중순 → 진행사항 문구에서 확정일 추출","saledate":"08월 말","saledate_kind":"approx","maker":"제조사 3","ftype":"혼합음료","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2월 9일","sample":"근거 없음","spec":"제조사·규격·단가 확정 (네이처텍)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 02/11(수)","inb":"입고예정 08월 중순"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/19(수) 인데 ⑤ 표시검토 미완료"},{"k":"soon","lv":"info","n":"입고 임박","m":"입고 D-6 (08/19(수))"},{"k":"split","lv":"info","n":"분할입고","m":"분할 입고 건 — 입고 회차별 확인 필요"}],"lvl":"crit","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":8,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 008","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2월 9일","confirm":"2월 9일","dpmove":"02/11(수)","indate":"08/21(금)","indate_iso":"2026-08-21","indate_kind":"exact","indate_raw":"8월 중순 → 진행사항 문구에서 확정일 추출","saledate":"08월 말","saledate_kind":"approx","maker":"제조사 3","ftype":"건강기능식품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"wip","label":"wip","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2월 9일","sample":"근거 없음","spec":"제조사·규격·단가 확정 (네이처텍)","design":"진행사항 \"스티커\"","label":"진행사항 \"표시사항\"","dp":"상세페이지 컨텐츠 이관 02/11(수)","inb":"입고예정 08월 중순"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/21(금) 인데 ⑤ 표시검토 미완료"},{"k":"split","lv":"info","n":"분할입고","m":"분할 입고 건 — 입고 회차별 확인 필요"}],"lvl":"crit","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 중순","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":9,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 009","dept":"요청부서 4","devtype":"신제품","pm":"D","channel":"편의점(CU)","chs":["편의점"],"chMain":"편의점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-05-26","confirm":"2026-08-11","dpmove":"미정","indate":"08/06(목)","indate_iso":"2026-08-06","indate_kind":"exact","indate_raw":"2026-08-06","saledate":"미정","saledate_kind":"none","maker":"제조사 4","ftype":"혼합음료","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"기안완료 2026-05-26","sample":"⑦ 입고 완료로 소급","spec":"제조사·규격·단가 확정 (네추럴웨이)","design":"⑦ 입고 완료로 소급","label":"⑦ 입고 완료로 소급","dp":"⑦ 입고 완료로 소급","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/06(목)","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/06(목)","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/06(목)","chg":true}],"chg":true,"dp":null,"clSched":"8월/완료","clMemo":"","clBlock":"","gidx":0},{"id":10,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 010","dept":"요청부서 5","devtype":"규격변경","pm":"A","channel":"코스트코","chs":["창고형·마트"],"chMain":"창고형·마트","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"7월 13일","confirm":"7월 14일","dpmove":"07/29(수)","indate":"08월 말","indate_iso":"2026-08-27","indate_kind":"approx","indate_raw":"8월 말","saledate":"08월 말","saledate_kind":"approx","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"wip","dp":"done","inb":"wip"},"why":{"concept":"기안완료 7월 13일","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"상세페이지 컨텐츠 이관 07/29(수)","inb":"입고예정 08월 말"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"확인필요","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08월 말 인데 ⑤ 표시검토 미완료"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 08월 말 인데 ③ 규격/견적 미확정"}],"lvl":"crit","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":11,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 011","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-10","confirm":"2026-06-22","dpmove":"06/24(수)","indate":"08/12(수)","indate_iso":"2026-08-12","indate_kind":"exact","indate_raw":"2026-08-12","saledate":"08월 중","saledate_kind":"approx","maker":"제조사 5","ftype":"기타가공품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2026-06-10","sample":"근거 없음","spec":"제조사·규격·단가 확정 (코스맥스엔비티)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 06/24(수)","inb":"입고예정 08/12(수)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"지연","flags":[{"k":"overdue","lv":"crit","n":"입고일 경과","m":"입고예정 08/12(수) · 1일 경과했는데 입고 확인 안 됨"},{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/12(수) 인데 ⑤ 표시검토 미완료"},{"k":"split","lv":"info","n":"분할입고","m":"분할 입고 건 — 입고 회차별 확인 필요"}],"lvl":"crit","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/12(수)","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/12(수)","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/12(수)","chg":true}],"chg":true,"dp":{"item":"제품 011","status":"디자인 수정 중","team":"상품전략1팀","pm":"C","planner":"기획 A","designer":"디자인 A","steps":[{"n":"콘텐츠 접수","v":"06/24(수)"},{"n":"QM SB 검수","v":"07/13(월)"},{"n":"디자인 의뢰","v":"07/16(목)"},{"n":"1차 시안","v":"07/30(목)"},{"n":"본심의·QM검수","v":"07/30(목)"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"08/19(목)"},{"n":"상세페이지 완료","v":"08/18(화)"}]},"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":12,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 012","dept":"요청부서 5","devtype":"신제품","pm":"B","channel":"해외(중국,대만)","chs":["해외","해외 · 중국","해외 · 대만"],"chMain":"해외 · 중국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"07/03(금)","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"wip","label":"wip","dp":"done","inb":"none"},"why":{"concept":"의뢰부서 상품마케팅본부","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"칼선\"","label":"진행사항 \"영양성분\"","dp":"상세페이지 컨텐츠 이관 07/03(금)","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 완료","stageIdx":5,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"신제품","gidx":0},{"id":13,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 013","dept":"요청부서 4","devtype":"리뉴얼","pm":"B","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"08/03(월)","indate_iso":"2026-08-03","indate_kind":"exact","indate_raw":"08월 03일","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"의뢰부서 리테일영업부 · ⑦ 입고 완료로 소급","sample":"⑦ 입고 완료로 소급","spec":"⑦ 입고 완료로 소급","design":"⑦ 입고 완료로 소급","label":"⑦ 입고 완료로 소급","dp":"⑦ 입고 완료로 소급","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/03(월)","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/03(월)","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/03(월)","chg":false}],"chg":false,"dp":null,"clSched":"8월/완료","clMemo":"","clBlock":"","gidx":0},{"id":14,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 014","dept":"요청부서 4","devtype":"신제품","pm":"B","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"-","dpmove":"07/14(화)","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"wip","design":"done","label":"none","dp":"done","inb":"none"},"why":{"concept":"기안완료 2026-06-15","sample":"근거 없음","spec":"진행사항 \"가격구조\"","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 07/14(화)","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 완료","stageIdx":5,"status":"정상","flags":[],"lvl":"","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":15,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 015","dept":"요청부서 6","devtype":"규격변경","pm":"B","channel":"해외(중국)","chs":["해외","해외 · 중국"],"chMain":"해외 · 중국","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 글로벌4팀","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"라벨\"","label":"진행사항 \"통관\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"유기농 제외 버전, 중국 테스트 통관용 덧방라벨…\")"}],"lvl":"warn","done":0,"prog":0,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":0},{"id":16,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 016","dept":"요청부서 5","devtype":"신제품","pm":"D","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-04-16","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"wip","inb":"none"},"why":{"concept":"기안완료 2026-04-16","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"상세페이지 시트 · 홀딩 (입고일 확정 시 재개)","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 진행중","stageIdx":5,"status":"정상","flags":[{"k":"decide","lv":"crit","n":"의사결정 필요","m":"진행사항에 \"진행 여부\" — 팀장 판단 필요"},{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"대원 - 분석기관(인터텍)에서 분석 가능예상되오…\")"}],"lvl":"crit","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":{"item":"제품 016","status":"홀딩 (입고일 확정 시 재개)","team":"상품전략1팀","pm":"D","planner":"기획 A","designer":"디자인 B","steps":[{"n":"콘텐츠 접수","v":"04/08(수)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"04/21(화)"},{"n":"1차 시안","v":"05/22(금)"},{"n":"본심의·QM검수","v":"05/22(금)"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"06월 말"},{"n":"상세페이지 완료","v":"06/19(금)"}]},"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":17,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 017","dept":"요청부서 5","devtype":"신제품","pm":"D","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-23","confirm":"2026-08-27","dpmove":"미정","indate":"08/21(금)","indate_iso":"2026-08-21","indate_kind":"exact","indate_raw":"2026-08-21","saledate":"미정","saledate_kind":"none","maker":"제조사 6","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"wip","design":"none","label":"none","dp":"wip","inb":"wip"},"why":{"concept":"기안완료 2026-06-23","sample":"근거 없음","spec":"진행사항 \"가격가이드\"","design":"근거 없음","label":"근거 없음","dp":"상세페이지 시트 · QM 2차 검토 중","inb":"입고예정 08/21(금)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"확인필요","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/21(금) 인데 ⑤ 표시검토 미완료"},{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 미정 → 08/21(금)"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"대기\" — 외부 회신 대기 중"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 08/21(금) 인데 ③ 규격/견적 미확정"}],"lvl":"crit","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/21(금)","chg":true}],"chg":true,"dp":{"item":"제품 017","status":"QM 2차 검토 중","team":"상품전략1팀","pm":"D","planner":"기획 A","designer":"디자인 C","steps":[{"n":"콘텐츠 접수","v":"06/26(금)"},{"n":"QM SB 검수","v":"07/29(수)"},{"n":"디자인 의뢰","v":"07/30(목)"},{"n":"1차 시안","v":"08/13(목)"},{"n":"본심의·QM검수","v":"08/13(목)"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"08/21(금)"},{"n":"상세페이지 완료","v":"08/21(금)"}]},"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":18,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 018","dept":"요청부서 4","devtype":"신제품","pm":"C","channel":"롯데맥스","chs":["창고형·마트"],"chMain":"창고형·마트","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-01","confirm":"2026-07-15","dpmove":"07/14(화)","indate":"08/26(수)","indate_iso":"2026-08-26","indate_kind":"exact","indate_raw":"8월말 → 진행사항 문구에서 확정일 추출","saledate":"미정","saledate_kind":"none","maker":"제조사 7","ftype":"건강기능식품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2026-07-01","sample":"근거 없음","spec":"제조사·규격·단가 확정 (엠에스바이오텍)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 07/14(화)","inb":"입고예정 08월 말"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/26(수) 인데 ⑤ 표시검토 미완료"},{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"입고 예정(8/26), 가격구조 기안 상신…\")"}],"lvl":"crit","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":false}],"chg":false,"dp":{"item":"제품 018","status":"1차 심의 중","team":"상품전략1팀","pm":"C","planner":"기획 B","designer":"디자인 B","steps":[{"n":"콘텐츠 접수","v":"07/14(화)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"07/23(목)"},{"n":"1차 시안","v":"08/06(목)"},{"n":"본심의·QM검수","v":"08/07(금)"},{"n":"수정·변경심의","v":"08/18(화)"},{"n":"제품 입고","v":"08/26(수)"},{"n":"상세페이지 완료","v":"08/26(수)"}]},"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":19,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 019","dept":"요청부서 5","devtype":"리뉴얼","pm":"A","channel":"해외","chs":["창고형·마트","해외","해외 · 멕시코"],"chMain":"해외 · 멕시코","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"6월 25일","confirm":"7월 7일","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 6월 25일","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"멕시코 (코스트코)","gidx":0},{"id":20,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 020","dept":"요청부서 5","devtype":"리뉴얼","pm":"A","channel":"해외","chs":["창고형·마트","해외","해외 · 멕시코"],"chMain":"해외 · 멕시코","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"6월 25일","confirm":"7월 7일","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 6월 25일","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"확인중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"멕시코 (코스트코)","gidx":0},{"id":21,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 021","dept":"요청부서 2","devtype":"리뉴얼","pm":"A","channel":"멕시코 코스트코","chs":["창고형·마트","해외","해외 · 멕시코"],"chMain":"해외 · 멕시코","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"09/04(금)","indate_iso":"2026-09-04","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 해외마케팅부","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 진행중","stageIdx":0,"status":"정상","flags":[{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 09/04(금) 인데 ③ 규격/견적 미확정"}],"lvl":"warn","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"멕시코 (코스트코)","gidx":0},{"id":22,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 022","dept":"요청부서 5","devtype":"규격변경","pm":"A","channel":"올리브영(글로벌)","chs":["올리브영"],"chMain":"올리브영","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-08","confirm":"-","dpmove":"미정","indate":"08/18(화)","indate_iso":"2026-08-18","indate_kind":"exact","indate_raw":"8월 18일","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"done","label":"none","dp":"none","inb":"wip"},"why":{"concept":"기안완료 2026-07-08","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"근거 없음","inb":"입고예정 08/18(화)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"labelLate","lv":"crit","n":"입고 임박·표시검토 미완","m":"입고 08/18(화) 인데 ⑤ 표시검토 미완료"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 08/18(화) 인데 ③ 규격/견적 미확정"},{"k":"noDp","lv":"warn","n":"입고 임박·상세페이지 미착수","m":"입고 08/18(화) 인데 ⑥ 상세페이지 미착수"},{"k":"soon","lv":"info","n":"입고 임박","m":"입고 D-5 (08/18(화))"}],"lvl":"crit","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/18(화)","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/18(화)","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08/18(화)","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":0},{"id":23,"src":"주간업무","track":"국내·범용","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 023","dept":"요청부서 5","devtype":"리뉴얼","pm":"D","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"2026-08-10","dpmove":"미정","indate":"08/11(화)","indate_iso":"2026-08-11","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"done","label":"done","dp":"done","inb":"done"},"why":{"concept":"출시확정 2026-08-10","sample":"⑦ 입고 완료로 소급","spec":"⑦ 입고 완료로 소급","design":"⑦ 입고 완료로 소급","label":"진행사항 \"품목신고\" · ⑦ 입고 완료로 소급","dp":"상세페이지 시트 · 전사공유 완료","inb":"진행사항 \"입고 완료\""},"stageTxt":"⑦ 입고 완료","stageIdx":6,"status":"완료","flags":[],"lvl":"","done":7,"prog":100,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":{"item":"제품 023","status":"전사공유 완료","team":"상품전략1팀","pm":"D","planner":"기획 B","designer":"디자인 D","steps":[{"n":"콘텐츠 접수","v":"06/24(수)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"06/29(월)"},{"n":"1차 시안","v":"07/21(화)"},{"n":"본심의·QM검수","v":"-"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"08/03(월)"},{"n":"상세페이지 완료","v":"07/22(수)"}]},"clSched":"","clMemo":"","clBlock":"","gidx":0},{"id":24,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 024","dept":"요청부서 4","devtype":"규격변경","pm":"A","channel":"해외(올영 USA)","chs":["올리브영","해외","해외 · 미국"],"chMain":"해외 · 미국","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"올리브영 QC 검토 요청…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"미국 (올영USA)","gidx":0},{"id":25,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 025","dept":"요청부서 4","devtype":"규격변경","pm":"A","channel":"해외(올영 USA)","chs":["올리브영","해외","해외 · 미국"],"chMain":"해외 · 미국","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"올리브영 QC 검토 요청…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"미국 (올영USA)","gidx":0},{"id":26,"src":"주간업무","track":"해외","group":"26년 8월","gy":2026,"gm":8,"brand":"브랜드 1","item":"제품 026","dept":"요청부서 4","devtype":"규격변경","pm":"D","channel":"해외(올영 USA)","chs":["올리브영","해외","해외 · 미국"],"chMain":"해외 · 미국","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"올리브영 QC 검토 요청…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"미국 (올영USA)","gidx":0},{"id":27,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 027","dept":"요청부서 2","devtype":"리뉴얼","pm":"B","channel":"해외","chs":["해외"],"chMain":"해외","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"01월 09일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"done","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 01월 09일","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 완료","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"할랄인증 완료 (생산x)","gidx":1},{"id":28,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 028","dept":"요청부서 7","devtype":"덧방라벨","pm":"B","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"done","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 완료","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":29,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 029","dept":"요청부서 7","devtype":"덧방라벨","pm":"B","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"진행사항 \"표시검토\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":30,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 030","dept":"요청부서 7","devtype":"덧방라벨","pm":"C","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"진행사항 \"표시검토\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":31,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 031","dept":"요청부서 7","devtype":"덧방라벨","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"젤리 리뉴얼 단케이스 1차 디자인 위에 영국 덧…\")"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":32,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 032","dept":"요청부서 7","devtype":"리뉴얼","pm":"A","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"배합비\"","spec":"근거 없음","design":"진행사항 \"라벨\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"덧방라벨 표시 검토 진행 중 /배합비 변경 확정…\")"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":33,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 033","dept":"요청부서 7","devtype":"리뉴얼","pm":"C","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"none","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"배합비\"","spec":"근거 없음","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":34,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 034","dept":"요청부서 7","devtype":"리뉴얼","pm":"B","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"진행사항 \"영양성분\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"대기\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":35,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 035","dept":"요청부서 7","devtype":"리뉴얼","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"배합비\"","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"진행사항 \"qm\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":36,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 036","dept":"요청부서 7","devtype":"리뉴얼","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"배합비\"","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"진행사항 \"qm\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":37,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 037","dept":"요청부서 7","devtype":"리뉴얼","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"배합비\"","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"진행사항 \"qm\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":38,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 038","dept":"요청부서 7","devtype":"덧방라벨","pm":"A","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"케이스\"","label":"진행사항 \"표시문안\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":39,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 039","dept":"요청부서 7","devtype":"덧방라벨","pm":"A","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-14","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-14","sample":"진행사항 \"시제\"","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"② 시제 진행중","stageIdx":1,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":40,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 040","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-07","confirm":"2026-07-23","dpmove":"미정","indate":"09/22(화)","indate_iso":"2026-09-22","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-07","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"진행사항 \"영양성분\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":41,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 041","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-07","confirm":"2026-07-23","dpmove":"미정","indate":"09/22(화)","indate_iso":"2026-09-22","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-07","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"진행사항 \"영양성분\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":42,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 042","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외(영국)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-07","confirm":"2026-07-23","dpmove":"미정","indate":"09/22(화)","indate_iso":"2026-09-22","indate_kind":"exact","indate_raw":"진행사항 문구에서 추출","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-07","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"이관\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":43,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 043","dept":"요청부서 7","devtype":"규격변경","pm":"D","channel":"해외(미얀마)","chs":["해외","해외 · 미얀마"],"chMain":"해외 · 미얀마","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 글로벌1팀","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"케이스\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"미얀마","gidx":1},{"id":44,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 044","dept":"요청부서 7","devtype":"규격변경","pm":"D","channel":"해외(미얀마)","chs":["해외","해외 · 미얀마"],"chMain":"해외 · 미얀마","tgroup":"규격·패키지변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-06","confirm":"2026-07-21","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-06","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"케이스\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"미얀마","gidx":1},{"id":45,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 045","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"2026-07-09","dpmove":"미정","indate":"09/04(금)","indate_iso":"2026-09-04","indate_kind":"exact","indate_raw":"2026-09-04","saledate":"미정","saledate_kind":"none","maker":"제조사 8","ftype":"기타가공품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"wip","inb":"wip"},"why":{"concept":"기안완료 2026-06-15","sample":"근거 없음","spec":"제조사·규격·단가 확정 (나래푸드텍)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 시트 · 디자인 시안 제작 중","inb":"입고예정 09/04(금)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 미정 → 09/04(금)"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"09/04(금)","chg":true}],"chg":true,"dp":{"item":"제품 045","status":"디자인 시안 제작 중","team":"상품전략1팀","pm":"C","planner":"기획 A","designer":"디자인 B","steps":[{"n":"콘텐츠 접수","v":"07/20(월)"},{"n":"QM SB 검수","v":"08/06(목)"},{"n":"디자인 의뢰","v":"08/06(목)"},{"n":"1차 시안","v":"08/25(화)"},{"n":"본심의·QM검수","v":"08/25(화)"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"09/04(금)"},{"n":"상세페이지 완료","v":"09/04(금)"}]},"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":46,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 046","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"2026-07-09","dpmove":"미정","indate":"09/04(금)","indate_iso":"2026-09-04","indate_kind":"exact","indate_raw":"2026-09-04","saledate":"미정","saledate_kind":"none","maker":"제조사 8","ftype":"기타가공품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"wip","inb":"wip"},"why":{"concept":"기안완료 2026-06-15","sample":"근거 없음","spec":"제조사·규격·단가 확정 (나래푸드텍)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 시트 · 디자인 시안 제작 중","inb":"입고예정 09/04(금)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 미정 → 09/04(금)"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"09/04(금)","chg":true}],"chg":true,"dp":{"item":"제품 046","status":"디자인 시안 제작 중","team":"상품전략1팀","pm":"C","planner":"기획 A","designer":"디자인 B","steps":[{"n":"콘텐츠 접수","v":"07/20(월)"},{"n":"QM SB 검수","v":"08/06(목)"},{"n":"디자인 의뢰","v":"08/06(목)"},{"n":"1차 시안","v":"08/25(화)"},{"n":"본심의·QM검수","v":"08/25(화)"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"09/04(금)"},{"n":"상세페이지 완료","v":"09/04(금)"}]},"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":47,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 047","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"2026-07-09","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"제조사 7","ftype":"건강기능식품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"none","dp":"wip","inb":"none"},"why":{"concept":"기안완료 2026-06-15","sample":"근거 없음","spec":"제조사·규격·단가 확정 (엠에스바이오텍)","design":"근거 없음","label":"근거 없음","dp":"상세페이지 시트 · 디자인 시안 제작 중","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 진행중","stageIdx":5,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":{"item":"제품 047","status":"디자인 시안 제작 중","team":"상품전략1팀","pm":"C","planner":"기획 A","designer":"디자인 B","steps":[{"n":"콘텐츠 접수","v":"07/20(월)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"08/04(화)"},{"n":"1차 시안","v":"08/18(화)"},{"n":"본심의·QM검수","v":"08/21(금)"},{"n":"수정·변경심의","v":"09/02(수)"},{"n":"제품 입고","v":"09월 말"},{"n":"상세페이지 완료","v":"09/11(금)"}]},"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":48,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 048","dept":"요청부서 5","devtype":"신제품","pm":"B","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"04월 21일","confirm":"2026-06-19","dpmove":"04/24(금)","indate":"09/03(목)","indate_iso":"2026-09-03","indate_kind":"exact","indate_raw":"09월 03일","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"wip","design":"none","label":"none","dp":"done","inb":"wip"},"why":{"concept":"기안완료 04월 21일","sample":"근거 없음","spec":"진행사항 \"가격가이드\"","design":"근거 없음","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 04/24(금)","inb":"입고예정 09/03(목)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 08월 말 → 09/03(목)"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 09/03(목) 인데 ③ 규격/견적 미확정"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"09/03(목)","chg":true}],"chg":true,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":49,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 049","dept":"요청부서 8","devtype":"신제품","pm":"B","channel":"쿠팡, 해외","chs":["쿠팡","해외"],"chMain":"쿠팡","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"06/23(화)","indate":"09/02(수)","indate_iso":"2026-09-02","indate_kind":"exact","indate_raw":"09월 02일","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"wip","design":"none","label":"none","dp":"done","inb":"wip"},"why":{"concept":"의뢰부서 커머스그로스팀","sample":"근거 없음","spec":"진행사항 \"가격가이드\"","design":"근거 없음","label":"근거 없음","dp":"상세페이지 컨텐츠 이관 06/23(화)","inb":"입고예정 09/02(수)"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"정상","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 08월 말 → 09/02(수)"},{"k":"noSpec","lv":"warn","n":"규격·단가 미확정","m":"입고 09/02(수) 인데 ③ 규격/견적 미확정"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"08월 말","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"09/02(수)","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":1},{"id":50,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 050","dept":"요청부서 4","devtype":"신제품","pm":"B","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-06-15","sample":"진행사항 \"관능\"","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"② 시제 진행중","stageIdx":1,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"관능 확인 후 영업팀 진행 의사 없음으로, 제품…\")"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":51,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 051","dept":"요청부서 4","devtype":"신제품","pm":"B","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-06-15","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"확인필요","flags":[{"k":"decide","lv":"crit","n":"의사결정 필요","m":"진행사항에 \"진행 여부\" — 팀장 판단 필요"},{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"영업 진행 여부 확인 중(글로벌2팀)…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"확인 중\" — 외부 회신 대기 중"}],"lvl":"crit","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":52,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 052","dept":"요청부서 4","devtype":"신제품","pm":"B","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-06-15","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-06-15","sample":"진행사항 \"관능\"","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"② 시제 진행중","stageIdx":1,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"2주째 진행사항 동일 (\"관능 확인 후 영업팀 진행 의사 없음으로, 제품…\")"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":53,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 053","dept":"요청부서 4","devtype":"신제품","pm":"C","channel":"다이소","chs":["다이소"],"chMain":"다이소","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-24","confirm":"2026-07-28","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"wip","dp":"wip","inb":"none"},"why":{"concept":"기안완료 2026-07-24","sample":"근거 없음","spec":"진행사항 \"기안 완료\"","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"진행사항 \"상세페이지\"","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 진행중","stageIdx":5,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토중\" — 외부 회신 대기 중"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":1},{"id":54,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 054","dept":"요청부서 4","devtype":"신제품","pm":"C","channel":"다이소","chs":["다이소"],"chMain":"다이소","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-24","confirm":"2026-07-28","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"wip","dp":"wip","inb":"none"},"why":{"concept":"기안완료 2026-07-24","sample":"근거 없음","spec":"진행사항 \"기안 완료\"","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"진행사항 \"상세페이지\"","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 진행중","stageIdx":5,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토중\" — 외부 회신 대기 중"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":1},{"id":55,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 055","dept":"요청부서 4","devtype":"신제품","pm":"C","channel":"다이소","chs":["다이소"],"chMain":"다이소","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-24","confirm":"2026-07-28","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"wip","dp":"wip","inb":"none"},"why":{"concept":"기안완료 2026-07-24","sample":"근거 없음","spec":"진행사항 \"기안 완료\"","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"진행사항 \"상세페이지\"","inb":"입고 일정 미기재"},"stageTxt":"⑥ 상세페이지 진행중","stageIdx":5,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토중\" — 외부 회신 대기 중"}],"lvl":"warn","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":1},{"id":56,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 056","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"09월 중","indate_iso":"2026-09-15","indate_kind":"approx","indate_raw":"9월 입고","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 상품마케팅본부","sample":"근거 없음","spec":"진행사항 \"발주\"","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"9월 입고 재발주 품목부터 진행 예정…\")"}],"lvl":"warn","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":57,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 057","dept":"요청부서 5","devtype":"리뉴얼","pm":"A","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"진행사항 \"검토 예정\"","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 진행중","stageIdx":0,"status":"정상","flags":[],"lvl":"","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"8월","clMemo":"","clBlock":"","gidx":1},{"id":58,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 058","dept":"요청부서 5","devtype":"리뉴얼","pm":"A","channel":"공구","chs":["공구·라이브"],"chMain":"공구·라이브","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"wip","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 상품마케팅본부","sample":"진행사항 \"시제\"","spec":"진행사항 \"발주\"","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"정상","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":59,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 059","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"진행사항 \"방향성\"","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 진행중","stageIdx":0,"status":"정상","flags":[{"k":"decide","lv":"crit","n":"의사결정 필요","m":"진행사항에 \"진행 방향\" — 팀장 판단 필요"}],"lvl":"crit","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":60,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 060","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"wip","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"진행사항 \"방향성\"","sample":"진행사항 \"시제\"","spec":"진행사항 \"견적\"","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"확인필요","flags":[{"k":"decide","lv":"crit","n":"의사결정 필요","m":"진행사항에 \"진행 방향\" — 팀장 판단 필요"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"대기\" — 외부 회신 대기 중"}],"lvl":"crit","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":61,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 061","dept":"요청부서 5","devtype":"리뉴얼","pm":"A","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"진행사항 \"검토 예정\"","sample":"근거 없음","spec":"진행사항 \"견적\"","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"정상","flags":[],"lvl":"","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":62,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 062","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"해외 (동남아)","chs":["해외","해외 · 미얀마","해외 · 동남아"],"chMain":"해외 · 미얀마","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2월 9일","confirm":"4월 3일","dpmove":"04/01(수)","indate":"10월 중","indate_iso":"2026-10-15","indate_kind":"approx","indate_raw":"10월 예상","saledate":"미정","saledate_kind":"none","maker":"제조사 2","ftype":"건강기능식품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"wip","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2월 9일","sample":"근거 없음","spec":"제조사·규격·단가 확정 (코스팜)","design":"근거 없음","label":"진행사항 \"qm\"","dp":"상세페이지 컨텐츠 이관 04/01(수)","inb":"입고예정 10월 중"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"확인필요","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 미정 → 10월 중"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"확인 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"10월 중","chg":true}],"chg":true,"dp":{"item":"제품 062","status":"상세페이지 SB 기획 중","team":"상품전략1팀","pm":"A","planner":"기획 A","designer":"","steps":[{"n":"콘텐츠 접수","v":"04/01(수)"},{"n":"QM SB 검수","v":"-"},{"n":"디자인 의뢰","v":"08/25(화)"},{"n":"1차 시안","v":"09/11(금)"},{"n":"본심의·QM검수","v":"-"},{"n":"수정·변경심의","v":"-"},{"n":"제품 입고","v":"10월 중"},{"n":"상세페이지 완료","v":"09/30(수)"}]},"clSched":"","clMemo":"","clBlock":"미얀마","gidx":1},{"id":63,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 063","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"해외 (동남아)","chs":["해외","해외 · 미얀마","해외 · 동남아"],"chMain":"해외 · 미얀마","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2월 9일","confirm":"4월 3일","dpmove":"04/01(수)","indate":"10월 중","indate_iso":"2026-10-15","indate_kind":"approx","indate_raw":"10월 예상","saledate":"미정","saledate_kind":"none","maker":"제조사 2","ftype":"건강기능식품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"none","label":"wip","dp":"done","inb":"wip"},"why":{"concept":"기안완료 2월 9일","sample":"근거 없음","spec":"제조사·규격·단가 확정 (코스팜)","design":"근거 없음","label":"진행사항 \"qm\"","dp":"상세페이지 컨텐츠 이관 04/01(수)","inb":"입고예정 10월 중"},"stageTxt":"⑦ 입고 진행중","stageIdx":6,"status":"확인필요","flags":[{"k":"dateChg","lv":"warn","n":"입고일 변경","m":"입고일 미정 → 10월 중"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"확인 중\" — 외부 회신 대기 중"}],"lvl":"warn","done":3,"prog":43,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"10월 중","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"미얀마","gidx":1},{"id":64,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 064","dept":"요청부서 5","devtype":"신제품","pm":"A","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"7월 14일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"wip","design":"none","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 7월 14일","sample":"근거 없음","spec":"진행사항 \"견적\"","design":"근거 없음","label":"진행사항 \"표시문안\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"확인중\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":65,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 065","dept":"요청부서 2","devtype":"신제품","pm":"A","channel":"해외(중국)","chs":["범용","해외","해외 · 중국"],"chMain":"해외 · 중국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"7월 14일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 7월 14일","sample":"근거 없음","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"① 컨셉기획 완료","stageIdx":0,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":66,"src":"주간업무","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 066","dept":"요청부서 4","devtype":"신제품","pm":"A","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"7월 14일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 7월 14일","sample":"진행사항 \"시제\"","spec":"근거 없음","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"② 시제 진행중","stageIdx":1,"status":"정상","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"호박맛 올린 버전으로 3차 시제 요청…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":67,"src":"주간업무","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 067","dept":"요청부서 2","devtype":"신제품","pm":"B","channel":"해외(중국)","chs":["해외","해외 · 중국"],"chMain":"해외 · 중국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"10월 10일","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"제조사 2","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 10월 10일","sample":"근거 없음","spec":"제조사 코스팜","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"확인필요","flags":[{"k":"stall","lv":"warn","n":"진행 정체","m":"3주째 진행사항 동일 (\"SCS WMS 결과 확인 완료, SMETA(8월…\")"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"대기\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":1},{"id":68,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 068","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-15","confirm":"2026-08-06","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"제조사 9","ftype":"캔디류","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"done","design":"wip","label":"wip","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-15","sample":"근거 없음","spec":"제조사·규격 확정 (서흥헬스케어)","design":"진행사항 \"디자인\"","label":"진행사항 \"영양성분\"","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"⑤ 표시검토 진행중","stageIdx":4,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":69,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 069","dept":"요청부서 4","devtype":"신제품","pm":"D","channel":"편의점(이마트24)","chs":["편의점"],"chMain":"편의점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"wip","spec":"wip","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 리테일영업부","sample":"진행사항 \"샘플\"","spec":"진행사항 \"제조사\"","design":"진행사항 \"칼선\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"지연","flags":[{"k":"delay","lv":"crit","n":"일정 지연·변동","m":"진행사항에 \"재검토\" 언급"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"crit","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":70,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 070","dept":"요청부서 4","devtype":"신제품","pm":"D","channel":"편의점(이마트24)","chs":["편의점"],"chMain":"편의점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"wip","spec":"wip","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 리테일영업부","sample":"진행사항 \"샘플\"","spec":"진행사항 \"제조사\"","design":"진행사항 \"칼선\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"지연","flags":[{"k":"delay","lv":"crit","n":"일정 지연·변동","m":"진행사항에 \"재검토\" 언급"},{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"검토 중\" — 외부 회신 대기 중"}],"lvl":"crit","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":71,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 071","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-08-06","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"제조사 5","ftype":"기타가공품","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"done","spec":"done","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-08-06","sample":"진행사항 \"시제 수령\"","spec":"제조사·규격 확정 (코스맥스엔비티)","design":"진행사항 \"디자인\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":3,"prog":43,"timeline":[{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":72,"src":"주간업무","track":"해외","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 072","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용","해외"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-15","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"제조사 9","ftype":"캔디류","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"wip","spec":"done","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-15","sample":"진행사항 \"샘플\"","spec":"제조사·규격 확정 (서흥헬스케어)","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 완료","stageIdx":2,"status":"정상","flags":[],"lvl":"","done":2,"prog":29,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"신제품","gidx":2},{"id":73,"src":"주간업무","track":"해외","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 073","dept":"요청부서 5","devtype":"신제품","pm":"D","channel":"범용","chs":["범용","해외"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"wip","spec":"wip","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 상품마케팅본부","sample":"진행사항 \"샘플\"","spec":"진행사항 \"견적\"","design":"근거 없음","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"③ 규격/견적 확정 진행중","stageIdx":2,"status":"정상","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"요청\" — 외부 회신 대기 중"}],"lvl":"warn","done":0,"prog":0,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"신제품","gidx":2},{"id":74,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 074","dept":"요청부서 4","devtype":"신제품","pm":"C","channel":"면세점","chs":["면세점"],"chMain":"면세점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"2026-07-24","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"done","sample":"none","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"기안완료 2026-07-24","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"패키지\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"확인필요","flags":[{"k":"waiting","lv":"warn","n":"회신·승인 대기","m":"진행사항에 \"대기\" — 외부 회신 대기 중"}],"lvl":"warn","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"미정","clMemo":"","clBlock":"","gidx":2},{"id":75,"src":"주간업무","track":"해외","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 075","dept":"요청부서 2","devtype":"리뉴얼","pm":"B","channel":"해외(미국정식통관)","chs":["해외","해외 · 미국"],"chMain":"해외 · 미국","tgroup":"리뉴얼","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"none","spec":"none","design":"done","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 해외마케팅부","sample":"근거 없음","spec":"근거 없음","design":"진행사항 \"데이터 이관 완료\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 완료","stageIdx":3,"status":"정상","flags":[],"lvl":"","done":1,"prog":14,"timeline":[{"d":"07/30","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false},{"d":"08/06","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true},{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":true}],"chg":true,"dp":null,"clSched":"","clMemo":"","clBlock":"미국 (정식통관)","gidx":2},{"id":76,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 076","dept":"요청부서 4","devtype":"신제품","pm":"D","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"done","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 리테일영업부","sample":"진행사항 \"시제 수령\"","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[{"k":"newItem","lv":"info","n":"금주 신규","m":"이번 주 주간업무에 처음 등장"}],"lvl":"info","done":1,"prog":14,"timeline":[{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":77,"src":"주간업무","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 077","dept":"요청부서 4","devtype":"신제품","pm":"D","channel":"올리브영","chs":["올리브영"],"chMain":"올리브영","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"wip","sample":"done","spec":"none","design":"wip","label":"none","dp":"none","inb":"none"},"why":{"concept":"의뢰부서 리테일영업부","sample":"진행사항 \"시제 수령\"","spec":"근거 없음","design":"진행사항 \"디자인\"","label":"근거 없음","dp":"근거 없음","inb":"입고 일정 미기재"},"stageTxt":"④ 디자인 진행중","stageIdx":3,"status":"정상","flags":[{"k":"newItem","lv":"info","n":"금주 신규","m":"이번 주 주간업무에 처음 등장"}],"lvl":"info","done":1,"prog":14,"timeline":[{"d":"08/13","issue":"(대외 공유용 · 진행사항 비공개)","indate":"미정","chg":false}],"chg":false,"dp":null,"clSched":"","clMemo":"","clBlock":"","gidx":2},{"id":78,"src":"체크리스트","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 078","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[{"k":"noMemo","lv":"info","n":"체크리스트 메모 없음","m":"팀장 체크리스트에 진행 메모가 비어 있습니다"}],"lvl":"info","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":79,"src":"체크리스트","track":"국내·범용","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 079","dept":"요청부서 5","devtype":"신제품","pm":"C","channel":"범용","chs":["범용"],"chMain":"범용","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"","gidx":1},{"id":80,"src":"체크리스트","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 080","dept":"요청부서 4","devtype":"신제품","pm":"B","channel":"트레이더스","chs":["창고형·마트"],"chMain":"창고형·마트","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"10월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":2},{"id":81,"src":"체크리스트","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 081","dept":"요청부서 9","devtype":"신제품","pm":"D","channel":"편의점(이마트24)","chs":["편의점"],"chMain":"편의점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"10월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":2},{"id":82,"src":"체크리스트","track":"국내·범용","group":"26년 10월","gy":2026,"gm":10,"brand":"브랜드 1","item":"제품 082","dept":"요청부서 9","devtype":"신제품","pm":"D","channel":"편의점(이마트24)","chs":["편의점"],"chMain":"편의점","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"10월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"10월","clMemo":"","clBlock":"","gidx":2},{"id":83,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 083","dept":"요청부서 7","devtype":"덧방","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":84,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 084","dept":"요청부서 7","devtype":"덧방","pm":"B","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":85,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 085","dept":"요청부서 7","devtype":"덧방","pm":"B","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":86,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 086","dept":"요청부서 7","devtype":"덧방","pm":"C","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":87,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 087","dept":"요청부서 7","devtype":"성분변경","pm":"A","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":88,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 088","dept":"요청부서 7","devtype":"성분변경","pm":"C","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":89,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 089","dept":"요청부서 7","devtype":"성분변경","pm":"A","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":90,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 090","dept":"요청부서 7","devtype":"성분변경","pm":"A","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":91,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 091","dept":"요청부서 7","devtype":"성분변경","pm":"B","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":92,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 092","dept":"요청부서 7","devtype":"성분변경","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":93,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 093","dept":"요청부서 7","devtype":"성분변경","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":94,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 094","dept":"요청부서 7","devtype":"성분변경","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"덧방·성분변경","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":95,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 095","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":96,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 096","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1},{"id":97,"src":"체크리스트","track":"해외","group":"26년 9월","gy":2026,"gm":9,"brand":"브랜드 1","item":"제품 097","dept":"요청부서 7","devtype":"신제품","pm":"D","channel":"해외 영국 (부츠)","chs":["해외","해외 · 영국"],"chMain":"해외 · 영국","tgroup":"신제품","issue":"(대외 공유용 · 진행사항 비공개)","draft":"-","confirm":"-","dpmove":"미정","indate":"미정","indate_iso":null,"indate_kind":"none","indate_raw":"-","saledate":"미정","saledate_kind":"none","maker":"-","ftype":"-","spec":"-","price":"-","moq":"-","po":"-","total":"-","st":{"concept":"none","sample":"none","spec":"none","design":"none","label":"none","dp":"none","inb":"none"},"why":{"concept":"체크리스트 건 (주간업무 미기재)","sample":"체크리스트 건 (주간업무 미기재)","spec":"체크리스트 건 (주간업무 미기재)","design":"체크리스트 건 (주간업무 미기재)","label":"체크리스트 건 (주간업무 미기재)","dp":"체크리스트 건 (주간업무 미기재)","inb":"체크리스트 건 (주간업무 미기재)"},"stageTxt":"9월 목표 · 주간업무 미기재","stageIdx":-1,"flags":[],"lvl":"","status":"사전검토","done":0,"prog":0,"timeline":[],"chg":false,"dp":null,"clSched":"9월","clMemo":"","clBlock":"영국 (부츠)","gidx":1}],"monthRange":"8~10월","anon":"full"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PMS = DATA.pms, STAGES = DATA.stages, TGS = DATA.typeGroups, FLAGS = DATA.flagDefs;
+const RAMP = ['--p1','--p2','--p3','--p4'];
+const pmColor = p => `var(${RAMP[Math.max(0,PMS.indexOf(p))%RAMP.length]})`;
+const tgColor = t => `var(${RAMP[Math.max(0,TGS.indexOf(t))%RAMP.length]})`;
+const STATUS = [
+  {k:'완료',    v:'--good',    i:'✓', c:'g'},
+  {k:'정상',    v:'--neutral', i:'●', c:'n'},
+  {k:'확인필요', v:'--warn',    i:'▲', c:'w'},
+  {k:'지연',    v:'--crit',    i:'■', c:'c'},
+  {k:'사전검토', v:'--neutral', i:'○', c:'n'},
+  {k:'드랍·홀딩',v:'--neutral', i:'—', c:'n'}
+];
+const stMeta = k => STATUS.find(s=>s.k===k) || STATUS[1];
+const LVN = {crit:'확인 시급', warn:'확인 필요', info:'참고'};
+
+const F = {pm:new Set(PMS), group:'', ch:'', status:'', type:'', brand:'', src:'', q:'',
+           chg:false, chk:false, flag:'', view:'month'};
+
+/* ── 헤더 ── */
+$('#meta').innerHTML =
+  `<span class="pill">기준일 <b>${DATA.base}</b></span>`
++ `<span class="pill">주간업무 <b>${esc(DATA.baseFile.replace(/\.xlsx$/,''))}</b></span>`
++ (DATA.clFile?`<span class="pill">체크리스트 <b>${esc(DATA.clFile.replace(/\.xlsx$/,''))}</b></span>`:'')
++ (DATA.monthRange?`<span class="pill">대상 <b>26년 ${DATA.monthRange}</b></span>`:'')
++ `<span class="pill">총 <b>${DATA.products.length}건</b></span>`
++ (DATA.anon?`<span class="pill" style="background:var(--warn-bg);border-color:transparent;color:var(--warn-ink)">양식 공유용 · 담당자명 ${DATA.anon==='full'?'및 제품정보 ':''}블라인드</span>`:'');
+
+/* ── 필터 UI ── */
+$('#fpm').innerHTML = PMS.map(p =>
+  `<button data-pm="${esc(p)}" aria-pressed="true"><i style="background:${pmColor(p)}"></i>${esc(p)}</button>`).join('');
+const uniq = f => [...new Set(DATA.products.map(f).filter(Boolean))];
+const fillSel = (id, list, all) => { $(id).innerHTML = `<option value="">${all}</option>` + list.map(v=>`<option>${esc(v)}</option>`).join(''); };
+const chCount = c => DATA.products.filter(p=>p.chs.includes(c)).length;
+fillSel('#fgroup', DATA.groups, '전체 출시월');
+$('#fch').innerHTML = '<option value="">전체 채널</option>' +
+  DATA.channels.map(c=>`<option value="${esc(c)}">${esc(c)} (${chCount(c)})</option>`).join('');
+fillSel('#fstatus', STATUS.map(s=>s.k), '전체 상태');
+fillSel('#ftype', TGS, '전체 유형');
+fillSel('#fbrand', uniq(p=>p.brand).sort(), '전체 브랜드');
+fillSel('#fsrc', ['주간업무','체크리스트'], '전체 출처');
+
+$('#fpm').onclick = e => { const b=e.target.closest('button'); if(!b) return;
+  const p=b.dataset.pm; if(F.pm.has(p)) F.pm.delete(p); else F.pm.add(p);
+  if(!F.pm.size) PMS.forEach(x=>F.pm.add(x));
+  [...$('#fpm').children].forEach(c=>c.setAttribute('aria-pressed', F.pm.has(c.dataset.pm)));
+  render(); };
+const SELMAP = {fgroup:'group',fch:'ch',fstatus:'status',ftype:'type',fbrand:'brand',fsrc:'src',fview:'view'};
+Object.keys(SELMAP).forEach(id => $('#'+id).onchange = e => { F[SELMAP[id]] = e.target.value; render(); });
+$('#q').oninput = e => { F.q = e.target.value.trim().toLowerCase(); render(); };
+$('#fchg').onclick = () => { F.chg=!F.chg; $('#fchg').setAttribute('aria-pressed',F.chg); render(); };
+$('#fchk').onclick = () => { F.chk=!F.chk; if(!F.chk) F.flag=''; $('#fchk').setAttribute('aria-pressed',F.chk); render(); };
+$('#reset').onclick = () => { PMS.forEach(p=>F.pm.add(p));
+  F.group=F.ch=F.status=F.type=F.brand=F.src=F.q=F.flag=''; F.chg=F.chk=false; F.view='month';
+  Object.keys(SELMAP).forEach(id=>$('#'+id).value=''); $('#fview').value='month'; $('#q').value='';
+  $('#fchg').setAttribute('aria-pressed','false'); $('#fchk').setAttribute('aria-pressed','false');
+  [...$('#fpm').children].forEach(c=>c.setAttribute('aria-pressed','true')); render(); };
+$('#theme').onclick = () => { const d=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', d?'light':'dark');
+  $('#theme').textContent = d?'다크 모드':'라이트 모드'; render(); };
+
+const view = () => DATA.products.filter(p =>
+     F.pm.has(p.pm)
+  && (!F.group  || p.group===F.group)
+  && (!F.ch     || p.chs.includes(F.ch))
+  && (!F.status || p.status===F.status)
+  && (!F.type   || p.tgroup===F.type)
+  && (!F.brand  || p.brand===F.brand)
+  && (!F.src    || p.src===F.src)
+  && (!F.chg    || p.chg)
+  && (!F.chk    || (p.lvl==='crit'||p.lvl==='warn'))
+  && (!F.flag   || p.flags.some(f=>f.k===F.flag))
+  && (!F.q || [p.item,p.brand,p.channel,p.issue,p.maker,p.dept,p.pm].join(' ').toLowerCase().includes(F.q)));
+
+const tip = $('#tip');
+function bindTip(el, html){
+  el.addEventListener('mousemove', e => { tip.innerHTML=html; tip.classList.add('on');
+    const w=tip.offsetWidth, x=Math.min(e.clientX+13, innerWidth-w-8);
+    tip.style.left=x+'px'; tip.style.top=(e.clientY-38)+'px'; });
+  el.addEventListener('mouseleave', () => tip.classList.remove('on'));
+}
+
+/* ── KPI ── */
+function kpis(ps){
+  const n = Math.max(1, ps.length);
+  const done = ps.filter(p=>p.st.inb==='done').length;
+  const soon = ps.filter(p=>p.st.inb!=='done' && p.indate_kind!=='none').length;
+  const crit = ps.filter(p=>p.lvl==='crit').length;
+  const warn = ps.filter(p=>p.lvl==='warn').length;
+  const chg  = ps.filter(p=>p.chg).length;
+  const stall= ps.filter(p=>p.flags.some(f=>f.k==='stall')).length;
+  const cards = [
+    ['진행 상품', ps.length, '건', `담당자 ${new Set(ps.map(p=>p.pm)).size}명 · 출시월 ${new Set(ps.map(p=>p.group)).size}구간`, '', 100],
+    ['금주 진행 변동', chg, '건', `전주 대비 진행사항 변경`, '', chg/n*100],
+    ['확인 시급', crit, '건', '입고일 경과 · 지연 · 의사결정 필요', 'is-crit', crit/n*100],
+    ['확인 필요', warn, '건', `정체 ${stall}건 · 회신 대기 · 기재 누락`, 'is-warn', warn/n*100],
+    ['입고 완료', done, '건', '주간업무 진행사항 기준', 'is-good', done/n*100],
+    ['입고 예정', soon, '건', '입고일 기재분', '', soon/n*100],
+  ];
+  $('#kpis').innerHTML = cards.map(([l,v,u,s,cl,pct]) =>
+    `<div class="kpi ${cl}"><div class="lab">${esc(l)}</div>
+     <div class="val">${v}<small>${u}</small></div>
+     <div class="meter"><i style="width:${Math.min(100,pct)}%"></i></div>
+     <div class="sub">${esc(s)}</div></div>`).join('');
+}
+
+/* ── 체크 패널 ── */
+function checkPanel(ps){
+  const cnt = {};
+  ps.forEach(p=>p.flags.forEach(f=>cnt[f.k]=(cnt[f.k]||0)+1));
+  const rows = FLAGS.filter(f=>cnt[f.k]);
+  $('#flagSummary').innerHTML = rows.length ? rows.map(f=>
+    `<div class="flagrow" data-k="${f.k}" aria-pressed="${F.flag===f.k}">
+       <span class="fdot ${f.lv}"></span><span class="n">${esc(f.n)}</span><span class="c">${cnt[f.k]}</span></div>`).join('')
+    : `<div style="color:var(--ink-3);font-size:12px;padding:6px 0">체크 항목이 없습니다.</div>`;
+  $('#flagSummary').querySelectorAll('.flagrow').forEach(r=>r.onclick=()=>{
+    F.flag = (F.flag===r.dataset.k)?'':r.dataset.k;
+    if(F.flag){ F.chk=false; $('#fchk').setAttribute('aria-pressed','false'); }
+    render();
+  });
+
+  const rank = {crit:0, warn:1, info:2};
+  const items = ps.filter(p=>p.flags.length && p.lvl!=='')
+    .sort((a,b)=> rank[a.lvl]-rank[b.lvl] || b.flags.length-a.flags.length || a.gidx-b.gidx)
+    .slice(0,40);
+  $('#ckSub').textContent = `확인 시급 ${ps.filter(p=>p.lvl==='crit').length}건 · 확인 필요 ${ps.filter(p=>p.lvl==='warn').length}건`;
+  $('#ckList').innerHTML = items.length ? items.map(p=>{
+    const f = p.flags.find(x=>x.lv===p.lvl) || p.flags[0];
+    return `<div class="citem" data-id="${p.id}">
+      <div class="t">${esc(p.item)}</div>
+      <div style="grid-row:1;grid-column:2"><span class="badge ${f.lv}">${esc(f.n)}</span></div>
+      <div class="meta">${esc(p.pm)} · ${esc(p.group)} · ${esc(p.chMain)}</div>
+      <div class="msg">${esc(f.m)}${p.flags.length>1?` <span style="color:var(--ink-3)">외 ${p.flags.length-1}건</span>`:''}</div>
+    </div>`; }).join('')
+    : `<div style="color:var(--ink-3);font-size:12px;padding:14px 0">현재 조건에서 확인이 필요한 건이 없습니다.</div>`;
+  $('#ckList').querySelectorAll('.citem').forEach(el=>el.onclick=()=>openDrawer(+el.dataset.id));
+}
+
+/* ── 차트1 ── */
+function chart1(ps){
+  const gs = DATA.groups.filter(g => (!F.group || g===F.group) && ps.some(p=>p.group===g));
+  const pms = PMS.filter(p=>F.pm.has(p));
+  const m = gs.map(g => ({g, v: pms.map(p => ps.filter(x=>x.group===g && x.pm===p).length)}));
+  const max = Math.max(1, ...m.map(r=>r.v.reduce((a,b)=>a+b,0)));
+  const W=560,H=206,PL=32,PR=6,PT=14,PB=34, iw=W-PL-PR, ih=H-PT-PB;
+  const step = iw/Math.max(1,gs.length), bw = Math.min(54, step*0.56);
+  const ticks = [0,.5,1].map(t=>Math.round(max*t)).filter((v,i,a)=>a.indexOf(v)===i);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 진행 건수">`;
+  ticks.forEach(t=>{ const y=PT+ih-ih*t/max;
+    s+=`<line class="${t===0?'baseline':'gridline'}" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/>
+        <text class="tick" x="${PL-7}" y="${y+3.5}" text-anchor="end">${t}</text>`; });
+  m.forEach((r,i)=>{
+    const x=PL+step*i+(step-bw)/2; let acc=0; const tot=r.v.reduce((a,b)=>a+b,0);
+    r.v.forEach((v,j)=>{ if(!v) return;
+      const h=ih*v/max, y=PT+ih-ih*acc/max-h; acc+=v;
+      s+=`<rect class="seg2" data-t="${esc(r.g)} · ${esc(pms[j])} <b>${v}건</b>" x="${x}" y="${y+1}" width="${bw}" height="${Math.max(0,h-2)}"
+            rx="${acc===tot?4:0}" fill="${pmColor(pms[j])}"/>`; });
+    if(tot) s+=`<text class="vlab" x="${x+bw/2}" y="${PT+ih-ih*tot/max-6}" text-anchor="middle" style="font-weight:620">${tot}</text>`;
+    const lab=r.g.replace('26년 ','').replace('·사전검토','');
+    s+=`<text class="tick" x="${x+bw/2}" y="${H-PB+17}" text-anchor="middle">${esc(lab.length>7?lab.slice(0,7):lab)}</text>`;
+  });
+  s+='</svg>';
+  $('#ch1').innerHTML=s;
+  $('#lg1').innerHTML = pms.map(p=>`<span><i style="background:${pmColor(p)}"></i>${esc(p)}</span>`).join('');
+  $('#ch1').querySelectorAll('.seg2').forEach(r=>bindTip(r, r.dataset.t));
+}
+
+/* ── 차트2 ── */
+function chart2(ps){
+  const cnt = {};
+  ps.forEach(p=>p.chs.forEach(c=>{ if(c.startsWith('해외 ·')) return;
+    (cnt[c] = cnt[c] || {})[p.tgroup] = (cnt[c][p.tgroup]||0)+1; }));
+  const tot = o => Object.values(o).reduce((a,b)=>a+b,0);
+  let rows = Object.entries(cnt).sort((a,b)=>tot(b[1])-tot(a[1]));
+  if(rows.length>10){
+    const rest = {};
+    rows.slice(10).forEach(([,o])=>Object.entries(o).forEach(([k,v])=>rest[k]=(rest[k]||0)+v));
+    rows = rows.slice(0,10); if(tot(rest)) rows.push(['기타 채널', rest]);
+  }
+  const max=Math.max(1,...rows.map(r=>tot(r[1])));
+  const W=440,RH=24,PL=106,PR=40,H=Math.max(60,rows.length*RH+8), iw=W-PL-PR;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="채널별 개발유형 진행 건수">`;
+  rows.forEach((r,i)=>{ const y=i*RH+5; let acc=0; const T=tot(r[1]);
+    s+=`<text class="tick" x="${PL-10}" y="${y+12}" text-anchor="end" style="fill:var(--ink-2)">${esc(r[0])}</text>`;
+    TGS.forEach(tg=>{ const v=r[1][tg]; if(!v) return;
+      const w=iw*v/max, x=PL+iw*acc/max; acc+=v;
+      s+=`<rect class="seg2" data-ch="${esc(r[0])}" data-t="${esc(r[0])} · ${esc(tg)} <b>${v}건</b>"
+            x="${x+1}" y="${y+1}" width="${Math.max(1,w-2)}" height="15" rx="4" fill="${tgColor(tg)}" style="cursor:pointer"/>`; });
+    s+=`<text class="vlab" x="${PL+iw*T/max+8}" y="${y+13}" style="font-weight:620">${T}</text>`; });
+  s+='</svg>';
+  $('#ch2').innerHTML=s;
+  $('#lg2').innerHTML = TGS.map(tg=>`<span><i style="background:${tgColor(tg)}"></i>${esc(tg)}</span>`).join('');
+  $('#ch2').querySelectorAll('.seg2').forEach(r=>{ bindTip(r, r.dataset.t);
+    r.onclick=()=>{ const c=r.dataset.ch; if(c==='기타 채널') return;
+      F.ch = (F.ch===c)?'':c; $('#fch').value=F.ch; render(); }; });
+}
+
+/* ── 담당자 투입 매트릭스 ── */
+let MXDIM = 'ch';
+$('#mxDim').onclick = e => { const b=e.target.closest('button'); if(!b) return;
+  MXDIM = b.dataset.d;
+  [...$('#mxDim').children].forEach(c=>c.setAttribute('aria-pressed', c.dataset.d===MXDIM));
+  matrix(view()); };
+
+function matrix(ps){
+  const pms = PMS.filter(p=>F.pm.has(p));
+  let rows;
+  if(MXDIM==='type'){
+    rows = TGS.filter(t=>ps.some(p=>p.tgroup===t)).map(t=>({k:t, has:p=>p.tgroup===t}));
+  }else{
+    const cnt={}; ps.forEach(p=>p.chs.forEach(c=>{ if(!c.startsWith('해외 ·')) cnt[c]=(cnt[c]||0)+1; }));
+    rows = Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,9)
+      .map(([c])=>({k:c, has:p=>p.chs.includes(c)}));
+  }
+  const M = rows.map(r=>pms.map(pm=>ps.filter(p=>p.pm===pm && r.has(p)).length));
+  const max = Math.max(1, ...M.flat());
+  const colT = pms.map((pm,j)=>M.reduce((a,r)=>a+r[j],0));
+  const tint = v => v===0 ? 'transparent'
+    : `color-mix(in srgb, var(--acc) ${Math.round(12+62*Math.sqrt(v/max))}%, var(--surface-1))`;
+  let h = `<table class="mx"><thead><tr><th class="rowh"></th>`
+    + pms.map(pm=>`<th><span style="display:inline-flex;align-items:center;gap:4px">
+        <i style="width:8px;height:8px;border-radius:2px;background:${pmColor(pm)};display:inline-block"></i>${esc(pm)}</span></th>`).join('')
+    + `<th style="width:44px">합계</th></tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    const tot = M[i].reduce((a,b)=>a+b,0);
+    h += `<tr><th class="rowh" title="${esc(r.k)}">${esc(r.k)}</th>`
+      + M[i].map((v,j)=>`<td><div class="cell ${v?'':'z'}" style="background:${tint(v)}"
+           data-r="${esc(r.k)}" data-pm="${esc(pms[j])}"
+           title="${esc(r.k)} · ${esc(pms[j])} ${v}건">${v||'·'}</div></td>`).join('')
+      + `<td><div class="cell tot">${tot}</div></td></tr>`;
+  });
+  h += `<tr class="totrow"><th class="rowh" style="color:var(--ink-3)">합계</th>`
+    + colT.map(v=>`<td><div class="cell">${v}</div></td>`).join('')
+    + `<td><div class="cell tot">${colT.reduce((a,b)=>a+b,0)}</div></td></tr></tbody></table>`;
+  h += `<div class="mxlegend">적음<span class="sc">`
+    + [0,.25,.5,.75,1].map(f=>`<i style="background:color-mix(in srgb, var(--acc) ${Math.round(12+62*Math.sqrt(f))}%, var(--surface-1))"></i>`).join('')
+    + `</span>많음 <span style="margin-left:auto">복수 채널 제품은 채널마다 중복 집계됩니다</span></div>`;
+  $('#mx').innerHTML = h;
+  $('#mx').querySelectorAll('.cell[data-pm]').forEach(el=>el.onclick=()=>{
+    const pm=el.dataset.pm, r=el.dataset.r;
+    F.pm = new Set([pm]);
+    [...$('#fpm').children].forEach(c=>c.setAttribute('aria-pressed', c.dataset.pm===pm));
+    if(MXDIM==='type'){ F.type=r; $('#ftype').value=r; F.ch=''; $('#fch').value=''; }
+    else { F.ch=r; $('#fch').value=r; F.type=''; $('#ftype').value=''; }
+    render(); window.scrollTo({top:document.querySelector('.tablewrap').offsetTop-90, behavior:'smooth'});
+  });
+}
+
+/* ── 담당자별 업무 부하 ── */
+const PHASES = [
+  {n:'기획 ①~③', s:'기획', v:'--p1', lo:0, hi:2},
+  {n:'실행 ④~⑥', s:'실행', v:'--p2', lo:3, hi:5},
+  {n:'입고 ⑦',   s:'입고', v:'--p4', lo:6, hi:6},
+];
+function workload(ps){
+  const base = new Date(DATA.base+'T00:00:00');
+  const dday = p => p.indate_iso ? Math.round((new Date(p.indate_iso+'T00:00:00')-base)/864e5) : null;
+  const pms = PMS.filter(p=>F.pm.has(p));
+  const rows = pms.map(pm=>{
+    const mine = ps.filter(p=>p.pm===pm);
+    const ph = PHASES.map(f=>mine.filter(p=>p.stageIdx>=f.lo && p.stageIdx<=f.hi).length);
+    const pre = mine.length - ph.reduce((a,b)=>a+b,0);
+    return {pm, n:mine.length, ph, pre,
+      crit:mine.filter(p=>p.lvl==='crit').length,
+      warn:mine.filter(p=>p.lvl==='warn').length,
+      soon:mine.filter(p=>{const d=dday(p); return d!==null && d<=30 && p.st.inb!=='done';}).length,
+      stall:mine.filter(p=>p.flags.some(f=>f.k==='stall')).length};
+  });
+  const max = Math.max(1, ...rows.map(r=>r.n));
+  $('#lgLoad').innerHTML = `<span><i style="background:var(--surface-3)"></i>미착수·사전검토</span>`
+    + PHASES.map(f=>`<span><i style="background:var(${f.v})"></i>${esc(f.n)}</span>`).join('');
+  $('#load').innerHTML = rows.map(r=>`
+    <div class="loadrow">
+      <div><div class="who"><i style="background:${pmColor(r.pm)}"></i>${esc(r.pm)}</div>
+           <div class="loadsub"><b style="color:var(--ink-1);font-weight:620">${r.n}건</b></div></div>
+      <div><div class="lbar" style="width:${Math.max(8,r.n/max*100)}%">
+        ${r.pre?`<span title="미착수·사전검토 ${r.pre}건" style="flex:${r.pre};background:var(--surface-3)"></span>`:''}
+        ${r.ph.map((v,i)=>v?`<span title="${esc(PHASES[i].n)} ${v}건" style="flex:${v};background:var(${PHASES[i].v})"></span>`:'').join('')}
+      </div>
+      <div class="loadsub">${r.pre?`미착수 ${r.pre} · `:''}${r.ph.map((v,i)=>`${PHASES[i].s} ${v}`).join(' · ')}</div></div>
+      <div class="lnum">
+        <span class="c">시급 <b class="c">${r.crit}</b></span>
+        <span class="w">필요 <b class="w">${r.warn}</b></span>
+        <span>정체 <b>${r.stall}</b></span>
+        <span>D-30 입고 <b>${r.soon}</b></span>
+      </div>
+    </div>`).join('');
+}
+
+/* ── 안내 ── */
+$('#guide').innerHTML =
+  STAGES.map(s=>`<span class="g1"><b class="k done">${s.short}</b>${s.no} ${esc(s.name)}</span>`).join('')
+  + `<span class="sep"></span>`
+  + `<span class="g1"><b class="k done">칠함</b>완료</span>
+     <span class="g1"><b class="k wip">연함</b>진행중</span>
+     <span class="g1"><b class="k">빈칸</b>미착수</span>
+     <span class="sep"></span>
+     <span>입고일 — <b>08/21(금) 입고완료</b> · <b>08/21(금) 예정</b> 확정일 · <b>08월 중순 예정</b> 구간 · <b>미정</b> 미기재</span>
+     <span class="sep"></span>
+     <span>비고·체크 — <span class="badge crit">확인 시급</span> <span class="badge warn">확인 필요</span> <span class="badge info">참고</span> 는 주간업무 진행사항을 주차별로 비교해 자동 판정합니다</span>`;
+
+/* ── 표 ── */
+const GKEY = {
+  month:   p => p.group,
+  ch:      p => p.chMain,
+  pm:      p => p.pm,
+  type:    p => p.tgroup,
+  monthch: p => p.group + ' ▸ ' + p.chMain,
+};
+function table(ps){
+  const kf = GKEY[F.view] || GKEY.month;
+  const ord = p => F.view==='ch' ? 0 : F.view==='pm' ? PMS.indexOf(p.pm)
+            : F.view==='type' ? TGS.indexOf(p.tgroup) : p.gidx;
+  const rank = {crit:0, warn:1, info:2, '':3};
+  const sorted = [...ps].sort((a,b)=>{
+    const x1=ord(a), x2=ord(b);
+    if(x1!==x2) return x1-x2;
+    const ka=kf(a), kb=kf(b);
+    if(ka!==kb) return ka.localeCompare(kb,'ko');
+    return rank[a.lvl]-rank[b.lvl] || (b.stageIdx-a.stageIdx) || PMS.indexOf(a.pm)-PMS.indexOf(b.pm) || a.id-b.id;
+  });
+  const counts = {};
+  sorted.forEach(p=>counts[kf(p)]=(counts[kf(p)]||0)+1);
+  let html='', cur=null;
+  sorted.forEach(p=>{
+    const k=kf(p);
+    if(k!==cur){ cur=k;
+      html+=`<tr class="grp"><td colspan="9">${esc(k)} <span class="cnt">· ${counts[k]}건</span></td></tr>`; }
+    const m=stMeta(p.status);
+    const fl = p.flags.slice(0,2).map(f=>`<span class="badge ${f.lv}" title="${esc(f.m)}">${esc(f.n)}</span>`).join('')
+             + (p.flags.length>2?`<span style="font-size:10.5px;color:var(--ink-3)">외 ${p.flags.length-2}건</span>`:'');
+    html+=`<tr class="row r-${p.lvl}" data-id="${p.id}">
+      <td><span class="nm">${p.src==='체크리스트'?'<span class="tag gray">체크리스트</span>':''}${esc(p.item)}</span>
+          <span class="sub2">${esc(p.brand)}${p.maker!=='-'?' · '+esc(p.maker):''}</span></td>
+      <td><span style="white-space:nowrap">${esc(p.devtype)}</span></td>
+      <td><span class="pm"><i style="background:${pmColor(p.pm)}"></i>${esc(p.pm)}</span></td>
+      <td><div class="chcell">${esc(p.channel)}</div></td>
+      <td><span class="stg">${STAGES.map(s=>`<b class="${p.st[s.key]}" title="${esc(s.no+' '+s.name)}">${s.short}</b>`).join('')}</span>
+          <span class="now">${esc(p.stageTxt)}</span></td>
+      <td><span class="dt ${p.st.inb==='done'?'done':p.indate_kind}">${esc(p.indate)}</span></td>
+      <td><span class="st"><span class="${m.c}">${m.i}</span>${esc(p.status)}</span></td>
+      <td><div class="flags">${fl||'<span style="color:var(--ink-3);font-size:11px">—</span>'}</div></td>
+      <td><div class="issue">${p.chg?'<span class="tag">변경</span>':''}${esc(p.issue)}</div></td></tr>`;
+  });
+  $('#tb').innerHTML=html;
+  $('#tCount').textContent = `상품 목록 ${sorted.length}건`;
+  $('#noRows').style.display = sorted.length?'none':'block';
+  $('#tb').querySelectorAll('.row').forEach(tr=>tr.onclick=()=>openDrawer(+tr.dataset.id));
+}
+
+/* ── 상세 패널 ── */
+function openDrawer(id){
+  const p = DATA.products.find(x=>x.id===id); if(!p) return;
+  const m = stMeta(p.status);
+  $('#dTitle').textContent = p.item;
+  $('#dSub').innerHTML = `${esc(p.brand)} · ${esc(p.group)} · 담당 ${esc(p.pm)} · <span class="${m.c}">${m.i} ${esc(p.status)}</span> · <b style="color:var(--ink-1)">${esc(p.stageTxt)}</b>`;
+  const stateTxt = v => v==='done'?'완료':v==='wip'?'진행중':'미착수';
+  let h = '';
+  if(p.flags.length){
+    h += `<div class="sec">비고 · 체크 사항</div>` + p.flags.map(f=>
+      `<div class="cknote ${f.lv}"><b>${esc(f.n)} · ${LVN[f.lv]}</b>${esc(f.m)}</div>`).join('');
+  }
+  if(p.src==='체크리스트'){
+    h += `<div class="note" style="border-left:3px solid var(--acc)">팀장 업무 체크리스트에만 있는 건입니다. 주간업무 파일에 기재되면 개발 단계가 자동으로 채워집니다.</div>`;
+  }
+  if(p.clMemo || p.clSched || p.clBlock){
+    h += `<div class="sec">팀장 체크리스트</div><div class="note">
+      ${p.clSched?`<b>일정 구분</b> ${esc(p.clSched)}<br>`:''}
+      ${p.clBlock?`<b>해외 구분</b> ${esc(p.clBlock)}<br>`:''}
+      ${p.clMemo?`<b>메모</b> ${esc(p.clMemo)}`:'메모 없음'}</div>`;
+  }
+  h += `<div class="sec">기본 정보</div><dl class="kv">
+    <dt>출처</dt><dd>${esc(p.src)}${p.src==='체크리스트'?' (주간업무 파일 미기재)':''}</dd>
+    <dt>개발유형</dt><dd>${esc(p.devtype)} <span style="color:var(--ink-3)">(${esc(p.tgroup)})</span></dd>
+    <dt>의뢰부서</dt><dd>${esc(p.dept)||'-'}</dd>
+    <dt>유통채널</dt><dd>${esc(p.channel)||'-'}<div style="color:var(--ink-3);font-size:11px">${p.chs.map(esc).join(' · ')}</div></dd>
+    <dt>제조사</dt><dd>${esc(p.maker)}</dd>
+    <dt>식품유형</dt><dd>${esc(p.ftype)}</dd>
+    <dt>규격</dt><dd>${esc(p.spec)}</dd>
+    <dt>단가 / MOQ</dt><dd>${esc(p.price)} / ${esc(p.moq)}</dd>
+    <dt>발주 / 총액</dt><dd>${esc(p.po)} / ${esc(p.total)}</dd>
+    <dt>입고일</dt><dd>${esc(p.indate)}${p.indate_raw&&p.indate_raw!=='-'?` <span style="color:var(--ink-3)">· ${esc(p.indate_raw)}</span>`:''}</dd>
+    <dt>판매개시</dt><dd>${esc(p.saledate)}</dd></dl>`;
+  h += `<div class="sec">개발 단계 · 판정 근거</div><div>`
+    + STAGES.map(s=>{ const v=p.st[s.key];
+      return `<div class="step ${v}"><div class="dot">${v==='done'?'✓':v==='wip'?'·':''}</div>
+        <div><div class="t">${s.no} ${esc(s.name)} <span style="color:var(--ink-3);font-weight:400">· ${stateTxt(v)}</span></div>
+        <div class="d">${esc((p.why&&p.why[s.key])||'-')}</div></div></div>`; }).join('') + `</div>`;
+  h += `<div class="sec">주차별 진행사항 · 주간업무 파일</div><div class="tl">` +
+    (p.timeline.length ? [...p.timeline].reverse().map(e=>
+      `<div class="e ${e.chg?'chg':''}"><div class="w">${esc(e.d)} · 입고 ${esc(e.indate)}</div><div class="x">${esc(e.issue)}</div></div>`).join('')
+      : `<div style="color:var(--ink-3);font-size:12px">주간업무 파일에 기재된 이력이 없습니다.</div>`) + `</div>`;
+  if(p.dp){
+    h += `<div class="sec">상세페이지 진행 · ${esc(p.dp.status||'-')}</div><dl class="kv">` +
+      p.dp.steps.map(s=>`<dt>${esc(s.n)}</dt><dd>${esc(s.v)||'-'}</dd>`).join('') +
+      `<dt>기획 / 디자인</dt><dd>${esc(p.dp.planner)||'-'} / ${esc(p.dp.designer)||'-'}</dd></dl>`;
+  }
+  $('#dBody').innerHTML=h; $('#dBody').scrollTop=0;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); $('#drawer').setAttribute('aria-hidden','false');
+}
+const closeDrawer=()=>{ $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); };
+$('#dClose').onclick=closeDrawer; $('#scrim').onclick=closeDrawer;
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
+
+/* ── CSV ── */
+$('#csv').onclick = () => {
+  const head=['출시월','출처','구분','브랜드','품목','개발유형','유형분류','담당자','의뢰부서','유통채널','채널분류','제조사','규격','단가',
+    ...STAGES.map(s=>s.no+' '+s.name),'현재 단계','입고일','판매개시','상태','체크 등급','비고·체크','최근 진행사항','팀장 메모'];
+  const rows=view().map(p=>[p.group,p.src,p.track,p.brand,p.item,p.devtype,p.tgroup,p.pm,p.dept,p.channel,p.chs.join(' / '),p.maker,p.spec,p.price,
+    ...STAGES.map(s=>({done:'완료',wip:'진행중',none:'미착수'})[p.st[s.key]]),
+    p.stageTxt,p.indate,p.saledate,p.status,LVN[p.lvl]||'',
+    p.flags.map(f=>`[${f.n}] ${f.m}`).join(' / '),p.issue,p.clMemo]);
+  const csv='﻿'+[head,...rows].map(r=>r.map(c=>`"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`상품전략1팀_파이프라인_${DATA.base.replace(/-/g,'')}.csv`; a.click();
+};
+
+function render(){ const ps=view(); kpis(ps); checkPanel(ps); chart1(ps); chart2(ps); matrix(ps); workload(ps); table(ps); }
+render();
+</script>
+</body>
+</html>
